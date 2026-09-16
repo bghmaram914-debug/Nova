@@ -1,0 +1,18 @@
+{
+  "name": "nova-backend",
+  "version": "1.0.0",
+  "description": "API REST NOVA - Moteur de croisement et détection précoce collaborative",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pg": "^8.11.5",
+    "uuid": "^9.0.1"
+  }
+}
