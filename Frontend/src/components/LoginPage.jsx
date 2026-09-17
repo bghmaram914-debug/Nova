@@ -56,7 +56,7 @@ const generateCaptchaCode = () => {
   return code;
 };
 
-export default function LoginPage({ onLoginSuccess }) {
+export default function LoginPage({ onLoginSuccess, logoutNotice }) {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [selected, setSelected] = useState('FAMILLE');
 
@@ -882,6 +882,32 @@ export default function LoginPage({ onLoginSuccess }) {
               </div>
             ) : (
               <>
+                {/* Notification de déconnexion automatique (12h) */}
+                {logoutNotice && (
+                  <div style={{
+                    background: '#fff1f2',
+                    border: '1.5px solid #fecdd3',
+                    borderRadius: 14,
+                    padding: '12px 16px',
+                    marginBottom: 20,
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 12,
+                    color: '#9f1239',
+                    fontSize: '.86rem',
+                    lineHeight: 1.45,
+                    boxShadow: '0 2px 8px rgba(225,29,72,0.08)'
+                  }}>
+                    <ShieldCheck size={20} color="#e11d48" style={{ flexShrink: 0, marginTop: 2 }} />
+                    <div>
+                      <strong style={{ display: 'block', marginBottom: 2, color: '#be123c', fontWeight: 800 }}>
+                        Session Clôturée Automatiquement
+                      </strong>
+                      {logoutNotice}
+                    </div>
+                  </div>
+                )}
+
                 {/* Tabs Toggle (Se connecter / Créer un compte) */}
                 <div className="auth-toggle-tabs">
                   <button

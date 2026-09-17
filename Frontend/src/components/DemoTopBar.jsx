@@ -1,5 +1,5 @@
 import React from 'react';
-import { GraduationCap, Users, Stethoscope, ShieldCheck, Sparkles, LogOut, UserCheck, HeartHandshake } from 'lucide-react';
+import { GraduationCap, Users, Stethoscope, ShieldCheck, Sparkles, LogOut, UserCheck, HeartHandshake, Clock } from 'lucide-react';
 
 const ROLE_MAP = {
   ENSEIGNANT:   { label: 'Espace Éducatif & Enseignant', color: '#1d4ed8', bg: '#eff6ff', icon: GraduationCap },
@@ -7,9 +7,18 @@ const ROLE_MAP = {
   SPECIALISTE:  { label: 'Espace Pédopsychiatrique & Clinique', color: '#0d9488', bg: '#f0fdfa', icon: Stethoscope },
 };
 
-export default function DemoTopBar({ activeRole, activeChild, currentUser, onLogout, onOpenInscription }) {
+export default function DemoTopBar({ activeRole, activeChild, currentUser, onLogout, onOpenInscription, remainingSeconds }) {
   const roleInfo = ROLE_MAP[activeRole] || {};
   const Icon = roleInfo.icon;
+
+  const formatHoursMinutes = (secs) => {
+    if (secs == null) return null;
+    const hours = Math.floor(secs / 3600);
+    const minutes = Math.floor((secs % 3600) / 60);
+    if (hours > 0) return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
+    const seconds = secs % 60;
+    return `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
+  };
 
   return (
     <header style={{
@@ -52,6 +61,22 @@ export default function DemoTopBar({ activeRole, activeChild, currentUser, onLog
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '.78rem' }}>
+          {remainingSeconds != null && (
+            <span style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              background: 'rgba(56, 189, 248, 0.15)',
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              color: '#7dd3fc',
+              padding: '2px 9px',
+              borderRadius: '6px',
+              fontWeight: 600,
+              fontSize: '.74rem',
+            }}>
+              <Clock size={12} color="#38bdf8" /> Session sécurisée (12h) : {formatHoursMinutes(remainingSeconds)}
+            </span>
+          )}
           <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#6ee7b7', fontWeight: 600 }}>
             <ShieldCheck size={14} /> Cadre Légal INADP (Loi 2004-63)
           </span>
