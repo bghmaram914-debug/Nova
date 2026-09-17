@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { GraduationCap, Users, Stethoscope, Eye, EyeOff, ArrowRight, ShieldCheck, HeartHandshake, Award, UserPlus, LogIn, MapPin, Building } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { GraduationCap, Users, Stethoscope, Eye, EyeOff, ArrowRight, ShieldCheck, HeartHandshake, Award, UserPlus, LogIn, MapPin, Building, RefreshCw, Lock } from 'lucide-react';
 
 const SPACES = [
   {
@@ -46,6 +46,16 @@ const GOUVERNORATS = [
   'Gafsa', 'Tozeur', 'Kebili', 'Gabès', 'Medenine', 'Tataouine', 'Béja', 'Jendouba', 'Le Kef', 'Siliana'
 ];
 
+// Générateur de code CAPTCHA aléatoire
+const generateCaptchaCode = () => {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let code = '';
+  for (let i = 0; i < 5; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
+
 export default function LoginPage({ onLoginSuccess }) {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [selected, setSelected] = useState('FAMILLE');
@@ -58,9 +68,23 @@ export default function LoginPage({ onLoginSuccess }) {
   const [specialite, setSpecialite] = useState('');
   const [gouvernorat, setGouvernorat] = useState('Tunis');
 
+  // CAPTCHA State
+  const [captchaCode, setCaptchaCode] = useState('');
+  const [captchaInput, setCaptchaInput] = useState('');
+
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Initialiser et régénérer le CAPTCHA
+  const refreshCaptcha = () => {
+    setCaptchaCode(generateCaptchaCode());
+    setCaptchaInput('');
+  };
+
+  useEffect(() => {
+    refreshCaptcha();
+  }, []);
 
   const space = SPACES.find(s => s.role === selected) || SPACES[1];
 
@@ -76,6 +100,7 @@ export default function LoginPage({ onLoginSuccess }) {
   const handleToggleMode = (register) => {
     setIsRegisterMode(register);
     setError(null);
+    refreshCaptcha();
     if (!register && space) {
       setEmail(space.defaultEmail);
       setPassword(space.defaultPassword);
@@ -88,6 +113,14 @@ export default function LoginPage({ onLoginSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selected) return;
+
+    // Validation du CAPTCHA
+    if (captchaInput.trim().toUpperCase() !== captchaCode.toUpperCase()) {
+      setError('Code CAPTCHA incorrect. Veuillez saisir le code de sécurité affiché.');
+      refreshCaptcha();
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -128,6 +161,7 @@ export default function LoginPage({ onLoginSuccess }) {
         } else if (data.error) {
           setError(data.error);
           setLoading(false);
+          refreshCaptcha();
           return;
         }
       } catch (err) {
@@ -175,6 +209,7 @@ export default function LoginPage({ onLoginSuccess }) {
         }, `nova_token_tn_${Date.now()}`);
       } else {
         setError('Veuillez sélectionner un espace.');
+        refreshCaptcha();
       }
     }
   };
@@ -182,7 +217,7 @@ export default function LoginPage({ onLoginSuccess }) {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap');
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -441,6 +476,44 @@ export default function LoginPage({ onLoginSuccess }) {
           padding: 0;
         }
         .toggle-btn:hover { color: #475569; }
+
+        /* CAPTCHA Widget Styling */
+        .captcha-container {
+          background: #f8fafc;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 12px 16px;
+          margin-bottom: 16px;
+        }
+        .captcha-badge {
+          background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+          color: #38bdf8;
+          font-family: 'Share Tech Mono', monospace, sans-serif;
+          font-size: 1.4rem;
+          font-weight: 900;
+          letter-spacing: 0.35em;
+          padding: 10px 18px;
+          border-radius: 8px;
+          user-select: none;
+          position: relative;
+          overflow: hidden;
+          box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+          display: flex; align-items: center; justify-content: center;
+        }
+        .captcha-badge::before {
+          content: '';
+          position: absolute;
+          top: 0; left: -100%; width: 100%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+          transform: skewX(-20deg);
+          animation: captchaShine 3s indefinite;
+        }
+        .captcha-noise-line {
+          position: absolute;
+          width: 100%; height: 2px;
+          background: rgba(239, 68, 68, 0.4);
+          transform: rotate(-6deg);
+        }
 
         /* Error */
         .error-box {
@@ -729,6 +802,54 @@ export default function LoginPage({ onLoginSuccess }) {
                   </>
                 )}
 
+                {/* WIDGET CAPTCHA VISUEL INTERACTIF */}
+                <div className="captcha-container">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <label style={{ fontSize: '.78rem', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Lock size={13} className="text-indigo-600" /> Code de sécurité (CAPTCHA Anti-Bot) *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={refreshCaptcha}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontSize: '.74rem', color: '#6366f1', fontWeight: 600,
+                        display: 'flex', alignItems: 'center', gap: 4
+                      }}
+                      title="Changer le code de sécurité"
+                    >
+                      <RefreshCw size={12} /> Régénérer
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {/* Badge Visuel CAPTCHA avec distorsion */}
+                    <div className="captcha-badge">
+                      <div className="captcha-noise-line"></div>
+                      <span>{captchaCode}</span>
+                    </div>
+
+                    {/* Saisie Utilisateur */}
+                    <input
+                      type="text"
+                      value={captchaInput}
+                      onChange={e => setCaptchaInput(e.target.value)}
+                      placeholder="Recopiez les 5 caractères..."
+                      maxLength={5}
+                      required
+                      style={{
+                        flex: 1,
+                        padding: '10px 14px',
+                        border: '1.5px solid #cbd5e1',
+                        borderRadius: 10,
+                        fontWeight: 700,
+                        letterSpacing: '.1em',
+                        textTransform: 'uppercase',
+                      }}
+                    />
+                  </div>
+                </div>
+
                 {/* Submit button */}
                 <button
                   type="submit"
@@ -740,15 +861,15 @@ export default function LoginPage({ onLoginSuccess }) {
                   }}
                 >
                   {loading ? (
-                    <span>Traitement en cours…</span>
+                    <span>Vérification & Traitement…</span>
                   ) : isRegisterMode ? (
                     <>
-                      <span>Créer mon compte NOVA</span>
+                      <span>Valider le CAPTCHA & Créer mon compte</span>
                       <UserPlus size={18} />
                     </>
                   ) : (
                     <>
-                      <span>Accéder à l'{space?.label}</span>
+                      <span>Valider & Accéder à l'{space?.label}</span>
                       <ArrowRight size={18} />
                     </>
                   )}
@@ -758,7 +879,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
             <div className="rgpd-note">
               <ShieldCheck size={14} color="#10b981" />
-              <span>Chiffrement AES-256 · Conforme Loi INADP Tunisie (2004-63)</span>
+              <span>CAPTCHA actif · Chiffrement AES-256 · Conforme Loi INADP Tunisie (2004-63)</span>
             </div>
           </div>
         </div>
