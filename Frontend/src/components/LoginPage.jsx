@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GraduationCap, Users, Stethoscope, Eye, EyeOff, ArrowRight, ShieldCheck, HeartHandshake, Award } from 'lucide-react';
+import { GraduationCap, Users, Stethoscope, Eye, EyeOff, ArrowRight, ShieldCheck, HeartHandshake, Award, UserPlus, LogIn, MapPin, Building, Sparkles } from 'lucide-react';
 
 const SPACES = [
   {
@@ -40,21 +40,50 @@ const SPACES = [
   },
 ];
 
+const GOUVERNORATS = [
+  'Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Nabeul', 'Bizerte', 'Zaghouan', 
+  'Sousse', 'Monastir', 'Mahdia', 'Sfax', 'Kairouan', 'Kasserine', 'Sidi Bouzid',
+  'Gafsa', 'Tozeur', 'Kebili', 'Gabès', 'Medenine', 'Tataouine', 'Béja', 'Jendouba', 'Le Kef', 'Siliana'
+];
+
 export default function LoginPage({ onLoginSuccess }) {
-  const [selected, setSelected] = useState(null);
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [selected, setSelected] = useState('FAMILLE');
+
+  // Form State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [nom, setNom] = useState('');
+  const [etablissement, setEtablissement] = useState('');
+  const [specialite, setSpecialite] = useState('');
+  const [gouvernorat, setGouvernorat] = useState('Tunis');
+  const [consentementInadp, setConsentementInadp] = useState(true);
+
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const space = SPACES.find(s => s.role === selected);
+  const space = SPACES.find(s => s.role === selected) || SPACES[1];
 
-  const handleSelect = (s) => {
+  const handleSelectSpace = (s) => {
     setSelected(s.role);
-    setEmail(s.defaultEmail);
-    setPassword(s.defaultPassword);
+    if (!isRegisterMode) {
+      setEmail(s.defaultEmail);
+      setPassword(s.defaultPassword);
+    }
     setError(null);
+  };
+
+  const handleToggleMode = (register) => {
+    setIsRegisterMode(register);
+    setError(null);
+    if (!register && space) {
+      setEmail(space.defaultEmail);
+      setPassword(space.defaultPassword);
+    } else {
+      setEmail('');
+      setPassword('');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -63,38 +92,93 @@ export default function LoginPage({ onLoginSuccess }) {
     setLoading(true);
     setError(null);
 
-    const matchedUser = SPACES.find(s => s.role === selected);
+    const matchedSpace = SPACES.find(s => s.role === selected);
 
-    try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        onLoginSuccess(data.user, data.token);
+    if (isRegisterMode) {
+      // Mode Inscription
+      if (!nom.trim()) {
+        setError('Veuillez saisir votre nom complet.');
+        setLoading(false);
         return;
       }
-    } catch (err) {
-      console.warn('Mode réseau local actif pour la connexion:', err);
-    } finally {
-      setLoading(false);
-    }
+      if (!email.trim() || !password) {
+        setError('Veuillez remplir l\'adresse e-mail et le mot de passe.');
+        setLoading(false);
+        return;
+      }
 
-    // Connexion immédiate sécurisée selon le rôle sélectionné
-    if (matchedUser) {
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nom: nom.trim(),
+            email: email.trim(),
+            password,
+            role: selected,
+            etablissement,
+            specialite,
+            gouvernorat,
+          }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          onLoginSuccess(data.user, data.token);
+          return;
+        } else if (data.error) {
+          setError(data.error);
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('Mode inscription locale:', err);
+      } finally {
+        setLoading(false);
+      }
+
+      // Fallback Inscription Locale
       onLoginSuccess({
-        id: `tn-${selected.toLowerCase()}-101`,
-        nom: matchedUser.nomDefaut,
+        id: `tn-user-${Date.now()}`,
+        nom: nom.trim(),
         role: selected,
-        email: email.trim() || matchedUser.defaultEmail,
-      }, `nova_token_tn_${Date.now()}`);
+        email: email.trim(),
+        etablissement: etablissement.trim() ? `${etablissement.trim()} (${gouvernorat})` : `Structure ${selected} (${gouvernorat})`,
+        specialite: specialite.trim() || `Intervenant ${selected}`,
+      }, `nova_token_reg_${Date.now()}`);
+
     } else {
-      setError('Veuillez sélectionner un espace.');
+      // Mode Connexion
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim(), password }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          onLoginSuccess(data.user, data.token);
+          return;
+        }
+      } catch (err) {
+        console.warn('Mode réseau local actif pour la connexion:', err);
+      } finally {
+        setLoading(false);
+      }
+
+      // Connexion immédiate sécurisée selon le rôle sélectionné
+      if (matchedSpace) {
+        onLoginSuccess({
+          id: `tn-${selected.toLowerCase()}-101`,
+          nom: matchedSpace.nomDefaut,
+          role: selected,
+          email: email.trim() || matchedSpace.defaultEmail,
+        }, `nova_token_tn_${Date.now()}`);
+      } else {
+        setError('Veuillez sélectionner un espace.');
+      }
     }
   };
-
 
   return (
     <>
@@ -216,10 +300,39 @@ export default function LoginPage({ onLoginSuccess }) {
           padding: 40px 32px;
         }
         .login-card {
-          width: 100%; max-width: 460px;
+          width: 100%; max-width: 480px;
         }
+
+        /* Mode Switcher Tabs */
+        .auth-toggle-tabs {
+          display: flex;
+          background: #f1f5f9;
+          padding: 4px;
+          border-radius: 14px;
+          margin-bottom: 24px;
+          border: 1px solid #e2e8f0;
+        }
+        .auth-toggle-btn {
+          flex: 1;
+          padding: 10px 16px;
+          border-radius: 10px;
+          border: none;
+          font-size: 0.88rem;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          transition: all 0.2s ease;
+          color: #64748b;
+          background: transparent;
+        }
+        .auth-toggle-btn.active {
+          background: white;
+          color: #0f172a;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
         .login-card-header {
-          margin-bottom: 28px;
+          margin-bottom: 24px;
         }
         .login-card-title {
           font-size: 1.75rem; font-weight: 800;
@@ -233,11 +346,11 @@ export default function LoginPage({ onLoginSuccess }) {
         /* Space selector */
         .space-grid {
           display: flex; flex-direction: column; gap: 10px;
-          margin-bottom: 24px;
+          margin-bottom: 22px;
         }
         .space-btn {
           display: flex; align-items: center; gap: 14px;
-          padding: 14px 18px;
+          padding: 12px 16px;
           border-radius: 14px;
           border: 1.5px solid #e2e8f0;
           background: white;
@@ -257,7 +370,7 @@ export default function LoginPage({ onLoginSuccess }) {
           box-shadow: 0 4px 16px var(--space-shadow);
         }
         .space-icon {
-          width: 42px; height: 42px; border-radius: 11px;
+          width: 40px; height: 40px; border-radius: 11px;
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
           background: #f1f5f9;
@@ -267,19 +380,16 @@ export default function LoginPage({ onLoginSuccess }) {
           background: var(--space-gradient);
         }
         .space-label {
-          font-size: 0.95rem; font-weight: 700; color: #0f172a;
+          font-size: 0.92rem; font-weight: 700; color: #0f172a;
           transition: color 0.18s;
         }
         .space-btn.active .space-label { color: var(--space-color); }
         .space-sublabel {
-          font-size: 0.75rem; color: #64748b; font-weight: 600; margin-top: 1px;
-        }
-        .space-desc {
-          font-size: 0.75rem; color: #94a3b8; margin-top: 1px;
+          font-size: 0.74rem; color: #64748b; font-weight: 600; margin-top: 1px;
         }
         .space-check {
           margin-left: auto;
-          width: 22px; height: 22px; border-radius: 50%;
+          width: 20px; height: 20px; border-radius: 50%;
           background: var(--space-gradient);
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0;
@@ -310,8 +420,8 @@ export default function LoginPage({ onLoginSuccess }) {
           margin-bottom: 6px;
         }
         .input-wrap { position: relative; }
-        .field input {
-          width: 100%; padding: 12px 14px;
+        .field input, .field select {
+          width: 100%; padding: 11px 14px;
           border: 1.5px solid #e2e8f0;
           border-radius: 10px;
           font-size: 0.92rem; font-family: inherit;
@@ -319,7 +429,7 @@ export default function LoginPage({ onLoginSuccess }) {
           outline: none;
           transition: border-color 0.15s, box-shadow 0.15s;
         }
-        .field input:focus {
+        .field input:focus, .field select:focus {
           border-color: #6366f1;
           box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
         }
@@ -365,13 +475,10 @@ export default function LoginPage({ onLoginSuccess }) {
           background: var(--space-gradient);
           box-shadow: 0 4px 14px var(--space-shadow);
         }
-        .submit-btn.colored:hover:not(:disabled) {
-          box-shadow: 0 6px 20px var(--space-shadow);
-        }
 
         /* RGPD note */
         .rgpd-note {
-          margin-top: 22px;
+          margin-top: 20px;
           text-align: center;
           font-size: 0.76rem; color: #64748b;
           display: flex; items-center; justify-content: center; gap: 6px;
@@ -446,14 +553,39 @@ export default function LoginPage({ onLoginSuccess }) {
         {/* ── RIGHT FORM ── */}
         <div className="login-form-panel">
           <div className="login-card">
+            
+            {/* Tabs Toggle (Se connecter / Créer un compte) */}
+            <div className="auth-toggle-tabs">
+              <button
+                type="button"
+                className={`auth-toggle-btn ${!isRegisterMode ? 'active' : ''}`}
+                onClick={() => handleToggleMode(false)}
+              >
+                <LogIn size={16} />
+                Se connecter
+              </button>
+              <button
+                type="button"
+                className={`auth-toggle-btn ${isRegisterMode ? 'active' : ''}`}
+                onClick={() => handleToggleMode(true)}
+              >
+                <UserPlus size={16} />
+                Créer un compte
+              </button>
+            </div>
+
             <div className="login-card-header">
-              <h1 className="login-card-title">Portail d'Accès</h1>
+              <h1 className="login-card-title">
+                {isRegisterMode ? 'Création de compte' : 'Portail d\'Accès'}
+              </h1>
               <p className="login-card-sub">
-                Sélectionnez votre domaine d'intervention pour ouvrir votre session sécurisée.
+                {isRegisterMode 
+                  ? 'Rejoignez le réseau national de détection précoce neurodéveloppementale.'
+                  : 'Sélectionnez votre domaine d\'intervention pour ouvrir votre session.'}
               </p>
             </div>
 
-            {/* Step 1 — Space selection */}
+            {/* Step 1 — Space / Role selection */}
             <div className="space-grid">
               {SPACES.map(s => {
                 const Icon = s.icon;
@@ -461,6 +593,7 @@ export default function LoginPage({ onLoginSuccess }) {
                 return (
                   <button
                     key={s.role}
+                    type="button"
                     className={`space-btn${isActive ? ' active' : ''}`}
                     style={{
                       '--space-color': s.color,
@@ -468,7 +601,7 @@ export default function LoginPage({ onLoginSuccess }) {
                       '--space-bg': `${s.color}0f`,
                       '--space-shadow': `${s.color}25`,
                     }}
-                    onClick={() => handleSelect(s)}
+                    onClick={() => handleSelectSpace(s)}
                   >
                     <div className="space-icon">
                       <Icon size={20} color={isActive ? 'white' : '#64748b'} />
@@ -476,7 +609,6 @@ export default function LoginPage({ onLoginSuccess }) {
                     <div>
                       <div className="space-label">{s.label}</div>
                       <div className="space-sublabel">{s.sublabel}</div>
-                      <div className="space-desc">{s.desc}</div>
                     </div>
                     <div className="space-check" style={{ '--space-gradient': s.gradient }}>
                       <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
@@ -488,83 +620,142 @@ export default function LoginPage({ onLoginSuccess }) {
               })}
             </div>
 
-            {/* Step 2 — Credentials (shown after space selected) */}
-            {selected && (
-              <div className="form-section">
-                <div className="divider">
-                  <div className="divider-line" />
-                  <span className="divider-text">Connexion à l'{space?.label}</span>
-                  <div className="divider-line" />
-                </div>
+            {/* Step 2 — Credentials Form (Login or Register) */}
+            <div className="form-section">
+              <div className="divider">
+                <div className="divider-line" />
+                <span className="divider-text">
+                  {isRegisterMode ? `Inscription · ${space?.label}` : `Connexion · ${space?.label}`}
+                </span>
+                <div className="divider-line" />
+              </div>
 
-                <form onSubmit={handleSubmit}>
-                  {error && <div className="error-box">{error}</div>}
+              <form onSubmit={handleSubmit}>
+                {error && <div className="error-box">{error}</div>}
 
+                {/* Champ Nom complet en mode Inscription */}
+                {isRegisterMode && (
                   <div className="field">
-                    <label htmlFor="email">Adresse e-mail professionnelle / familiale</label>
+                    <label htmlFor="nom">Nom complet & Titre *</label>
                     <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="votre.email@domaine.tn"
+                      id="nom"
+                      type="text"
+                      value={nom}
+                      onChange={e => setNom(e.target.value)}
+                      placeholder={selected === 'SPECIALISTE' ? 'Ex: Dr. Salma Ben Ammar' : selected === 'ENSEIGNANT' ? 'Ex: Mme Sonia Trabelsi' : 'Ex: Mme Leila & M. Mehdi B.'}
                       required
-                      autoComplete="username"
                     />
                   </div>
+                )}
 
-                  <div className="field">
-                    <label htmlFor="password">Mot de passe</label>
-                    <div className="input-wrap">
-                      <input
-                        id="password"
-                        type={showPwd ? 'text' : 'password'}
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        required
-                        className="has-toggle"
-                        autoComplete="current-password"
-                      />
-                      <button
-                        type="button"
-                        className="toggle-btn"
-                        onClick={() => setShowPwd(v => !v)}
-                        tabIndex={-1}
-                      >
-                        {showPwd ? <EyeOff size={17} /> : <Eye size={17} />}
-                      </button>
-                    </div>
+                {/* Email */}
+                <div className="field">
+                  <label htmlFor="email">Adresse e-mail professionnelle / familiale *</label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="votre.email@domaine.tn"
+                    required
+                    autoComplete="username"
+                  />
+                </div>
+
+                {/* Mot de passe */}
+                <div className="field">
+                  <label htmlFor="password">Mot de passe *</label>
+                  <div className="input-wrap">
+                    <input
+                      id="password"
+                      type={showPwd ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      className="has-toggle"
+                      autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
+                    />
+                    <button
+                      type="button"
+                      className="toggle-btn"
+                      onClick={() => setShowPwd(v => !v)}
+                      tabIndex={-1}
+                    >
+                      {showPwd ? <EyeOff size={17} /> : <Eye size={17} />}
+                    </button>
                   </div>
+                </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading || !email || !password}
-                    className="submit-btn colored"
-                    style={{
-                      '--space-gradient': space?.gradient,
-                      '--space-shadow': `${space?.color}35`,
-                    }}
-                  >
-                    {loading ? (
-                      <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83">
-                            <animateTransform attributeName="transform" type="rotate" values="0 12 12;360 12 12" dur="0.8s" repeatCount="indefinite" />
-                          </path>
-                        </svg>
-                        Authentification en cours…
-                      </>
-                    ) : (
-                      <>
-                        Accéder à l'{space?.label}
-                        <ArrowRight size={18} />
-                      </>
-                    )}
-                  </button>
-                </form>
-              </div>
-            )}
+                {/* Champs supplémentaires pour l'inscription */}
+                {isRegisterMode && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                      <div className="field" style={{ marginBottom: 0 }}>
+                        <label className="flex items-center gap-1">
+                          <MapPin size={13} className="text-indigo-600" /> Gouvernorat
+                        </label>
+                        <select
+                          value={gouvernorat}
+                          onChange={e => setGouvernorat(e.target.value)}
+                        >
+                          {GOUVERNORATS.map(g => (
+                            <option key={g} value={g}>{g}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="field" style={{ marginBottom: 0 }}>
+                        <label className="flex items-center gap-1">
+                          <Building size={13} className="text-indigo-600" /> Spécialité / Fonction
+                        </label>
+                        <input
+                          type="text"
+                          value={specialite}
+                          onChange={e => setSpecialite(e.target.value)}
+                          placeholder={selected === 'ENSEIGNANT' ? 'Ex: Professeure 2ème Année' : selected === 'SPECIALISTE' ? 'Ex: Pédopsychiatre' : 'Ex: Parent / Tuteur'}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="field">
+                      <label>Établissement / Structure d'exercice</label>
+                      <input
+                        type="text"
+                        value={etablissement}
+                        onChange={e => setEtablissement(e.target.value)}
+                        placeholder={selected === 'ENSEIGNANT' ? 'Ex: École Primaire Habib Bourguiba' : selected === 'SPECIALISTE' ? 'Ex: Centre de Pédopsychiatrie Tunis' : 'Ex: Domicile Familial'}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="submit-btn colored"
+                  style={{
+                    '--space-gradient': space?.gradient,
+                    '--space-shadow': `${space?.color}35`,
+                  }}
+                >
+                  {loading ? (
+                    <span>Traitement en cours…</span>
+                  ) : isRegisterMode ? (
+                    <>
+                      <span>Créer mon compte NOVA</span>
+                      <UserPlus size={18} />
+                    </>
+                  ) : (
+                    <>
+                      <span>Accéder à l'{space?.label}</span>
+                      <ArrowRight size={18} />
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
 
             <div className="rgpd-note">
               <ShieldCheck size={14} color="#10b981" />

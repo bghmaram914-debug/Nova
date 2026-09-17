@@ -213,6 +213,56 @@ export const loginUser = async (req, res) => {
   }
 };
 
+// --- INSCRIPTION D'UN COMPTE (ENSEIGNANT, FAMILLE, SPECIALISTE) ---
+export const registerUser = async (req, res) => {
+  const { nom, email, password, role, etablissement, specialite, gouvernorat } = req.body;
+
+  if (!nom || !email || !password || !role) {
+    return res.status(400).json({ error: 'Nom, e-mail, mot de passe et rôle sont obligatoires.' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+
+  // Vérifier si l'utilisateur existe déjà
+  const existing = mockDatabase.observateurs.find(o => o.email.toLowerCase() === cleanEmail);
+  if (existing) {
+    return res.status(400).json({ error: 'Un compte existe déjà avec cette adresse e-mail.' });
+  }
+
+  const id = uuidv4();
+  const nouvelObservateur = {
+    id,
+    nom: nom.trim(),
+    role,
+    email: cleanEmail,
+    mot_de_passe: password,
+    etablissement: etablissement?.trim() ? `${etablissement.trim()} (${gouvernorat || 'Tunisie'})` : `Structure ${role} (${gouvernorat || 'Tunisie'})`,
+    specialite: specialite?.trim() || `Intervenant ${role}`,
+    created_at: new Date().toISOString()
+  };
+
+  mockDatabase.observateurs.push(nouvelObservateur);
+
+  // Sauvegarder dans PostgreSQL si possible
+  try {
+    await db.query(
+      `INSERT INTO observateurs (id, nom, role, email, mot_de_passe, etablissement, specialite)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [id, nouvelObservateur.nom, role, cleanEmail, password, nouvelObservateur.etablissement, nouvelObservateur.specialite]
+    );
+  } catch (_) {}
+
+  const { mot_de_passe, ...safeUser } = nouvelObservateur;
+  const token = `nova_session_${id}_${Date.now()}`;
+
+  return res.status(201).json({
+    success: true,
+    user: safeUser,
+    token
+  });
+};
+
+
 
 // --- OBSERVATIONS ---
 export const getObservationsByEnfant = async (req, res) => {

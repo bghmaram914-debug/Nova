@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import db from './config/db.js';
 import {
   loginUser,
+  registerUser,
   getEnfants,
   getEnfantById,
   creerEnfant,
@@ -38,8 +39,10 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Route Authentification (Login 3 rôles)
+// Routes Authentification & Inscription (3 rôles)
 app.post('/api/auth/login', loginUser);
+app.post('/api/auth/register', registerUser);
+
 
 // Routes Enfants & Observateurs
 app.get('/api/enfants', getEnfants);
