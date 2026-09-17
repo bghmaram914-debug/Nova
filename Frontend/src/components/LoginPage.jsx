@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { GraduationCap, Users, Stethoscope, Eye, EyeOff, ArrowRight, ShieldCheck, HeartHandshake, Award } from 'lucide-react';
+import { GraduationCap, Users, Stethoscope, Eye, EyeOff, ArrowRight, ShieldCheck, HeartHandshake, Award, UserPlus, ArrowLeft } from 'lucide-react';
+import InscriptionEnfant from './InscriptionEnfant';
 
 const SPACES = [
   {
@@ -41,12 +42,14 @@ const SPACES = [
 ];
 
 export default function LoginPage({ onLoginSuccess }) {
+  const [mode, setMode] = useState('login'); // 'login' | 'inscription'
   const [selected, setSelected] = useState(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [inscriptionSuccessChild, setInscriptionSuccessChild] = useState(null);
 
   const space = SPACES.find(s => s.role === selected);
 
@@ -446,124 +449,241 @@ export default function LoginPage({ onLoginSuccess }) {
         {/* ── RIGHT FORM ── */}
         <div className="login-form-panel">
           <div className="login-card">
-            <div className="login-card-header">
-              <h1 className="login-card-title">Portail d'Accès</h1>
-              <p className="login-card-sub">
-                Sélectionnez votre domaine d'intervention pour ouvrir votre session sécurisée.
-              </p>
+            {/* Mode Switcher Tabs */}
+            <div style={{
+              display: 'flex',
+              background: '#f1f5f9',
+              padding: '4px',
+              borderRadius: '12px',
+              marginBottom: '20px',
+              gap: '4px'
+            }}>
+              <button
+                type="button"
+                onClick={() => setMode('login')}
+                style={{
+                  flex: 1,
+                  padding: '10px 14px',
+                  border: 'none',
+                  borderRadius: '9px',
+                  fontWeight: 700,
+                  fontSize: '.85rem',
+                  cursor: 'pointer',
+                  background: mode === 'login' ? 'white' : 'transparent',
+                  color: mode === 'login' ? '#0f172a' : '#64748b',
+                  boxShadow: mode === 'login' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all .2s ease'
+                }}
+              >
+                <ShieldCheck size={16} color={mode === 'login' ? '#2563eb' : '#64748b'} />
+                Connexion Espace
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('inscription')}
+                style={{
+                  flex: 1,
+                  padding: '10px 14px',
+                  border: 'none',
+                  borderRadius: '9px',
+                  fontWeight: 700,
+                  fontSize: '.85rem',
+                  cursor: 'pointer',
+                  background: mode === 'inscription' ? 'white' : 'transparent',
+                  color: mode === 'inscription' ? '#059669' : '#64748b',
+                  boxShadow: mode === 'inscription' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  transition: 'all .2s ease'
+                }}
+              >
+                <UserPlus size={16} color={mode === 'inscription' ? '#059669' : '#64748b'} />
+                Inscrire un Enfant
+              </button>
             </div>
 
-            {/* Step 1 — Space selection */}
-            <div className="space-grid">
-              {SPACES.map(s => {
-                const Icon = s.icon;
-                const isActive = selected === s.role;
-                return (
+            {mode === 'inscription' ? (
+              <div className="fade-in">
+                <div style={{ marginBottom: 16 }}>
                   <button
-                    key={s.role}
-                    className={`space-btn${isActive ? ' active' : ''}`}
+                    type="button"
+                    onClick={() => setMode('login')}
                     style={{
-                      '--space-color': s.color,
-                      '--space-gradient': s.gradient,
-                      '--space-bg': `${s.color}0f`,
-                      '--space-shadow': `${s.color}25`,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: 'none',
+                      border: 'none',
+                      color: '#2563eb',
+                      fontWeight: 600,
+                      fontSize: '.82rem',
+                      cursor: 'pointer',
+                      padding: 0,
+                      marginBottom: 12
                     }}
-                    onClick={() => handleSelect(s)}
                   >
-                    <div className="space-icon">
-                      <Icon size={20} color={isActive ? 'white' : '#64748b'} />
-                    </div>
-                    <div>
-                      <div className="space-label">{s.label}</div>
-                      <div className="space-sublabel">{s.sublabel}</div>
-                      <div className="space-desc">{s.desc}</div>
-                    </div>
-                    <div className="space-check" style={{ '--space-gradient': s.gradient }}>
-                      <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-                        <path d="M1 4.5L4 7.5L10 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
+                    <ArrowLeft size={14} /> Retour à la connexion
                   </button>
-                );
-              })}
-            </div>
-
-            {/* Step 2 — Credentials (shown after space selected) */}
-            {selected && (
-              <div className="form-section">
-                <div className="divider">
-                  <div className="divider-line" />
-                  <span className="divider-text">Connexion à l'{space?.label}</span>
-                  <div className="divider-line" />
+                </div>
+                <InscriptionEnfant
+                  onEnfantAjoute={(enfant) => {
+                    setInscriptionSuccessChild(enfant);
+                    // On peut basculer vers la connexion famille automatiquement
+                    setTimeout(() => {
+                      setSelected('FAMILLE');
+                      setMode('login');
+                    }, 2500);
+                  }}
+                />
+              </div>
+            ) : (
+              <>
+                <div className="login-card-header">
+                  <h1 className="login-card-title">Portail d'Accès</h1>
+                  <p className="login-card-sub">
+                    Sélectionnez votre domaine d'intervention pour ouvrir votre session sécurisée.
+                  </p>
                 </div>
 
-                <form onSubmit={handleSubmit}>
-                  {error && <div className="error-box">{error}</div>}
-
-                  <div className="field">
-                    <label htmlFor="email">Adresse e-mail professionnelle / familiale</label>
-                    <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="votre.email@domaine.tn"
-                      required
-                      autoComplete="username"
-                    />
-                  </div>
-
-                  <div className="field">
-                    <label htmlFor="password">Mot de passe</label>
-                    <div className="input-wrap">
-                      <input
-                        id="password"
-                        type={showPwd ? 'text' : 'password'}
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        required
-                        className="has-toggle"
-                        autoComplete="current-password"
-                      />
-                      <button
-                        type="button"
-                        className="toggle-btn"
-                        onClick={() => setShowPwd(v => !v)}
-                        tabIndex={-1}
-                      >
-                        {showPwd ? <EyeOff size={17} /> : <Eye size={17} />}
-                      </button>
+                {inscriptionSuccessChild && (
+                  <div style={{
+                    background: '#ecfdf5',
+                    border: '1px solid #a7f3d0',
+                    borderRadius: '10px',
+                    padding: '12px 14px',
+                    marginBottom: '16px',
+                    fontSize: '.84rem',
+                    color: '#065f46',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px'
+                  }}>
+                    <UserPlus size={18} color="#059669" />
+                    <div>
+                      Dossier créé avec succès pour <strong>{inscriptionSuccessChild.prenom}</strong> ({inscriptionSuccessChild.code || inscriptionSuccessChild.code_identifiant}). Connectez-vous ci-dessous.
                     </div>
                   </div>
+                )}
 
-                  <button
-                    type="submit"
-                    disabled={loading || !email || !password}
-                    className="submit-btn colored"
-                    style={{
-                      '--space-gradient': space?.gradient,
-                      '--space-shadow': `${space?.color}35`,
-                    }}
-                  >
-                    {loading ? (
-                      <>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83">
-                            <animateTransform attributeName="transform" type="rotate" values="0 12 12;360 12 12" dur="0.8s" repeatCount="indefinite" />
-                          </path>
-                        </svg>
-                        Authentification en cours…
-                      </>
-                    ) : (
-                      <>
-                        Accéder à l'{space?.label}
-                        <ArrowRight size={18} />
-                      </>
-                    )}
-                  </button>
-                </form>
-              </div>
+                {/* Step 1 — Space selection */}
+                <div className="space-grid">
+                  {SPACES.map(s => {
+                    const Icon = s.icon;
+                    const isActive = selected === s.role;
+                    return (
+                      <button
+                        key={s.role}
+                        className={`space-btn${isActive ? ' active' : ''}`}
+                        style={{
+                          '--space-color': s.color,
+                          '--space-gradient': s.gradient,
+                          '--space-bg': `${s.color}0f`,
+                          '--space-shadow': `${s.color}25`,
+                        }}
+                        onClick={() => handleSelect(s)}
+                      >
+                        <div className="space-icon">
+                          <Icon size={20} color={isActive ? 'white' : '#64748b'} />
+                        </div>
+                        <div>
+                          <div className="space-label">{s.label}</div>
+                          <div className="space-sublabel">{s.sublabel}</div>
+                          <div className="space-desc">{s.desc}</div>
+                        </div>
+                        <div className="space-check" style={{ '--space-gradient': s.gradient }}>
+                          <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                            <path d="M1 4.5L4 7.5L10 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Step 2 — Credentials (shown after space selected) */}
+                {selected && (
+                  <div className="form-section">
+                    <div className="divider">
+                      <div className="divider-line" />
+                      <span className="divider-text">Connexion à l'{space?.label}</span>
+                      <div className="divider-line" />
+                    </div>
+
+                    <form onSubmit={handleSubmit}>
+                      {error && <div className="error-box">{error}</div>}
+
+                      <div className="field">
+                        <label htmlFor="email">Adresse e-mail professionnelle / familiale</label>
+                        <input
+                          id="email"
+                          type="email"
+                          value={email}
+                          onChange={e => setEmail(e.target.value)}
+                          placeholder="votre.email@domaine.tn"
+                          required
+                          autoComplete="username"
+                        />
+                      </div>
+
+                      <div className="field">
+                        <label htmlFor="password">Mot de passe</label>
+                        <div className="input-wrap">
+                          <input
+                            id="password"
+                            type={showPwd ? 'text' : 'password'}
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            placeholder="••••••••"
+                            required
+                            className="has-toggle"
+                            autoComplete="current-password"
+                          />
+                          <button
+                            type="button"
+                            className="toggle-btn"
+                            onClick={() => setShowPwd(v => !v)}
+                            tabIndex={-1}
+                          >
+                            {showPwd ? <EyeOff size={17} /> : <Eye size={17} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={loading || !email || !password}
+                        className="submit-btn colored"
+                        style={{
+                          '--space-gradient': space?.gradient,
+                          '--space-shadow': `${space?.color}35`,
+                        }}
+                      >
+                        {loading ? (
+                          <>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83">
+                                <animateTransform attributeName="transform" type="rotate" values="0 12 12;360 12 12" dur="0.8s" repeatCount="indefinite" />
+                              </path>
+                            </svg>
+                            Authentification en cours…
+                          </>
+                        ) : (
+                          <>
+                            Accéder à l'{space?.label}
+                            <ArrowRight size={18} />
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </>
             )}
 
             <div className="rgpd-note">

@@ -7,7 +7,7 @@ const ROLE_MAP = {
   SPECIALISTE:  { label: 'Espace Pédopsychiatrique & Clinique', color: '#0d9488', bg: '#f0fdfa', icon: Stethoscope },
 };
 
-export default function DemoTopBar({ activeRole, activeChild, currentUser, onLogout }) {
+export default function DemoTopBar({ activeRole, activeChild, currentUser, onLogout, onOpenInscription }) {
   const roleInfo = ROLE_MAP[activeRole] || {};
   const Icon = roleInfo.icon;
 
@@ -104,8 +104,25 @@ export default function DemoTopBar({ activeRole, activeChild, currentUser, onLog
           </div>
         </div>
 
-        {/* Côté droit: Rôle actif & Déconnexion */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Côté droit: Rôle actif & Inscription & Déconnexion */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {onOpenInscription && (
+            <button
+              onClick={onOpenInscription}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                background: '#ecfdf5', border: '1.5px solid #a7f3d0',
+                color: '#059669', padding: '7px 13px', borderRadius: 10,
+                fontSize: '.82rem', fontWeight: 700, cursor: 'pointer',
+                transition: 'all .18s ease',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#d1fae5'; e.currentTarget.style.borderColor = '#6ee7b7'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = '#ecfdf5'; e.currentTarget.style.borderColor = '#a7f3d0'; }}
+            >
+              <Sparkles size={14} color="#059669" /> + Inscrire un enfant
+            </button>
+          )}
+
           {Icon && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: '10px',
