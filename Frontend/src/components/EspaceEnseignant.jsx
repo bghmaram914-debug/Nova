@@ -1,18 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { GraduationCap, Send, CheckCircle2, Lock, Users, User } from 'lucide-react';
+import { GraduationCap, Send, CheckCircle2, Lock, Users } from 'lucide-react';
 
 const DOMAINS = [
-  { id: 'ATTENTION',    icon: '🎯', label: 'Attention & Consignes',       desc: 'Maintien de l\'effort, compréhension des consignes' },
+  { id: 'ATTENTION',    icon: '🎯', label: 'Attention & Consignes',       desc: 'Effort d\'attention, écoute des consignes' },
   { id: 'LANGAGE',      icon: '💬', label: 'Langage & Communication',      desc: 'Expression orale, lecture, compréhension' },
-  { id: 'MEMOIRE',      icon: '🧠', label: 'Mémoire & Apprentissages',     desc: 'Mémorisation des leçons, orthographe, repères' },
-  { id: 'MOTRICITE',    icon: '✏️', label: 'Motricité fine & Écriture',    desc: 'Tenue du crayon, vitesse de copie, découpage' },
-  { id: 'COMPORTEMENT', icon: '🏫', label: 'Comportement & Vie de classe', desc: 'Relation aux pairs, règles, impulsivité' },
-];
-
-const PRESETS = [
-  { domaine: 'ATTENTION',    label: 'Attention soutenue',   detail: 'Difficulté persistante à maintenir son attention sur une double consigne écrite ou lors des exercices individuels de plus de 10 minutes.', ex: 'Regarde par la fenêtre dès le début de l\'exercice, oublie souvent la 2ème étape des consignes doubles.' },
-  { domaine: 'MOTRICITE',    label: 'Écriture difficile',   detail: 'Tenue du crayon crispée, lenteur pour copier les devoirs au tableau mais résultat lisible.', ex: 'Prend 5 minutes de plus que ses camarades pour copier la date.' },
-  { domaine: 'COMPORTEMENT', label: 'Agitation en classe',  detail: 'Bouge souvent, se lève sans raison apparente, perturbe parfois les camarades.', ex: 'A du mal à rester assis plus de 15 minutes sans se lever ou se retourner.' },
+  { id: 'MEMOIRE',      icon: '🧠', label: 'Mémoire & Apprentissage',      desc: 'Mémorisation des leçons, repères' },
+  { id: 'MOTRICITE',    icon: '✏️', label: 'Motricité fine & Graphisme',   desc: 'Tenue du stylo, vitesse d\'écriture' },
+  { id: 'COMPORTEMENT', icon: '🏫', label: 'Comportement & Relationnel',   desc: 'Intégration, respect des règles, agitation' },
 ];
 
 const FREQ_LABELS = ['', 'Très rare', 'Occasionnel', 'Régulier', 'Fréquent', 'Quotidien'];
@@ -25,12 +19,11 @@ export default function EspaceEnseignant({ child, onObservationAdded, user, allC
   const [domaine, setDomaine] = useState('ATTENTION');
   const [frequence, setFrequence] = useState(4);
   const [impact, setImpact] = useState(4);
-  const [detail, setDetail] = useState(PRESETS[0].detail);
-  const [exemples, setExemples] = useState(PRESETS[0].ex);
+  const [detail, setDetail] = useState('Difficulté persistante à maintenir son attention sur une double consigne écrite ou lors des exercices individuels de plus de 10 minutes.');
+  const [exemples, setExemples] = useState('Regarde souvent par la fenêtre au début de l\'exercice, oublie la 2ème étape.');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Charger la liste des enfants depuis l'API au chargement
   useEffect(() => {
     const fetchEnfants = async () => {
       try {
@@ -39,38 +32,20 @@ export default function EspaceEnseignant({ child, onObservationAdded, user, allC
           const data = await res.json();
           if (data && data.length > 0) {
             setEnfantsList(data);
-            // si pas d'enfant sélectionné, sélectionner le premier
-            if (!selectedChild) {
-              setSelectedChild(data[0]);
-            }
+            if (!selectedChild) setSelectedChild(data[0]);
           }
         }
-      } catch (err) {
-        console.warn('Impossible de charger la liste des enfants depuis l\'API, utilisation du mode fallback.');
-      }
+      } catch {}
     };
-
     fetchEnfants();
   }, []);
 
-  // Mettre à jour si la prop child change
   useEffect(() => {
     if (child) {
       setSelectedChild(child);
-      setEnfantsList((prev) => {
-        if (!prev.find((c) => c.id === child.id)) {
-          return [child, ...prev];
-        }
-        return prev;
-      });
+      setEnfantsList(prev => (!prev.find(c => c.id === child.id) ? [child, ...prev] : prev));
     }
   }, [child]);
-
-  const applyPreset = (p) => {
-    setDomaine(p.domaine);
-    setDetail(p.detail);
-    setExemples(p.ex);
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -82,7 +57,7 @@ export default function EspaceEnseignant({ child, onObservationAdded, user, allC
         body: JSON.stringify({
           enfantId: selectedChild?.id || child?.id || 'e1111111-1111-1111-1111-111111111111',
           observateurId: user?.id || 'a1111111-1111-1111-1111-111111111111',
-          observateurNom: user?.nom || 'Mme Dupuis (Enseignante)',
+          observateurNom: user?.nom || 'Mme Sonia Trabelsi',
           domaine,
           contexte: 'ECOLE',
           frequenceDifficulte: frequence,
@@ -97,182 +72,202 @@ export default function EspaceEnseignant({ child, onObservationAdded, user, allC
     } finally {
       setLoading(false);
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 5000);
+      setTimeout(() => setSuccess(false), 4000);
     }
   };
 
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }} className="fade-up">
-
-      {/* Page header */}
+    <div style={{ maxWidth: 840, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }} className="fade-up">
+      {/* En-tête avec sélecteur d'élève direct */}
       <div style={{
         background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)',
-        borderRadius: 'var(--r-2xl)',
-        padding: '28px 32px',
+        borderRadius: 16,
+        padding: '20px 24px',
         color: 'white',
-        boxShadow: '0 8px 24px rgba(29,78,216,.28)',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: 14,
+        boxShadow: '0 4px 14px rgba(29,78,216,.2)',
       }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-            <span style={{ background: 'rgba(255,255,255,.15)', padding: '3px 12px', borderRadius: 99, fontSize: '.75rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <GraduationCap size={13} /> ESPACE ENSEIGNANT
-            </span>
-            <span style={{ fontSize: '.82rem', opacity: .9 }}>{user?.nom || 'Mme Dupuis'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '.75rem', opacity: .9, marginBottom: 4 }}>
+            <GraduationCap size={15} />
+            <span>ESPACE ENSEIGNANT · SAISIE D'OBSERVATION FACTUELLE</span>
           </div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, margin: '0 0 6px', letterSpacing: '-.025em', color: 'white' }}>
-            Observation & Feedback en classe
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0, color: 'white' }}>
+            Observation en classe
           </h2>
-          <p style={{ margin: 0, fontSize: '.88rem', opacity: .88, maxWidth: 520, lineHeight: 1.55 }}>
-            Sélectionnez l'élève et décrivez vos observations factuelles en classe. Vos retours alimentent la détection précoce collaborative.
-          </p>
         </div>
 
-        {/* Child Badge / Selector */}
-        <div style={{ background: 'rgba(255,255,255,.12)', border: '1px solid rgba(255,255,255,.2)', borderRadius: 14, padding: '14px 20px', textAlign: 'center', minWidth: 180 }}>
-          <div style={{ fontSize: '.68rem', textTransform: 'uppercase', letterSpacing: '.07em', opacity: .75, marginBottom: 4 }}>Élève actuellement évalué</div>
-          <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>
-            {selectedChild?.prenom || 'Lucas'} {selectedChild?.nom_anonyme || selectedChild?.parentNom ? `(${selectedChild?.code || ''})` : 'M.'}
-          </div>
-          <div style={{ fontSize: '.78rem', opacity: .8, marginTop: 2 }}>
-            {selectedChild?.age || 7} ans · {selectedChild?.niveau_scolaire || selectedChild?.niveauScolaire || 'CP'}
-          </div>
+        {/* Sélecteur compact de l'élève */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,.15)', padding: '6px 12px', borderRadius: 10 }}>
+          <Users size={15} color="white" />
+          <span style={{ fontSize: '.8rem', fontWeight: 600 }}>Élève :</span>
+          <select
+            value={selectedChild?.id || ''}
+            onChange={e => {
+              const found = enfantsList.find(c => c.id === e.target.value);
+              if (found) setSelectedChild(found);
+            }}
+            style={{
+              padding: '4px 8px',
+              borderRadius: 6,
+              border: 'none',
+              background: 'white',
+              fontWeight: 700,
+              color: '#1e293b',
+              fontSize: '.82rem',
+              cursor: 'pointer',
+            }}
+          >
+            {enfantsList.map(e => (
+              <option key={e.id} value={e.id}>
+                {e.prenom} {e.nom_anonyme || ''} ({e.niveau_scolaire || 'Primaire'})
+              </option>
+            ))}
+            {enfantsList.length === 0 && <option value="">{child?.prenom || 'Youssef B.'}</option>}
+          </select>
         </div>
       </div>
 
-      {/* Selecteur d'enfant pour l'enseignant */}
-      <div className="card" style={{ padding: '18px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ padding: 8, background: '#e0e7ff', color: '#4338ca', borderRadius: 10 }}>
-            <Users size={18} />
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '.9rem', color: '#1e293b' }}>Choisir l'élève à observer</div>
-            <div style={{ fontSize: '.78rem', color: '#64748b' }}>Tous les enfants inscrits par les parents apparaissent ici</div>
-          </div>
-        </div>
-
-        <select
-          value={selectedChild?.id || ''}
-          onChange={(e) => {
-            const found = enfantsList.find((c) => c.id === e.target.value);
-            if (found) setSelectedChild(found);
-          }}
-          style={{
-            padding: '10px 16px',
-            borderRadius: 10,
-            border: '1.5px solid #cbd5e1',
-            background: 'white',
-            fontWeight: 600,
-            color: '#1e293b',
-            fontSize: '.9rem',
-            cursor: 'pointer',
-            minWidth: 220,
-          }}
-        >
-          {enfantsList.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.prenom} {e.nom_anonyme || ''} ({e.niveau_scolaire || e.niveauScolaire || 'CP'}) {e.code ? `- ${e.code}` : ''}
-            </option>
-          ))}
-          {enfantsList.length === 0 && (
-            <option value="">{child?.prenom || 'Lucas'} (Défaut)</option>
-          )}
-        </select>
-      </div>
-
-      {/* Ethical notice */}
-      <div className="alert alert-info" style={{ fontSize: '.84rem' }}>
-        <Lock size={15} style={{ flexShrink: 0, marginTop: 1 }} />
-        <span><strong>Observation indépendante :</strong> Vous ne voyez pas les réponses de la famille ni des spécialistes — vos remarques doivent décrire des faits observés en classe uniquement pour {selectedChild?.prenom || 'cet élève'}.</span>
-      </div>
-
-      {/* Success */}
       {success && (
-        <div className="alert alert-success fade-in">
-          <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
-          <span>Observation enregistrée avec succès pour <strong>{selectedChild?.prenom}</strong>. Elle contribue au croisement multi-acteurs.</span>
+        <div style={{
+          background: '#ecfdf5',
+          border: '1px solid #a7f3d0',
+          borderRadius: 10,
+          padding: '10px 16px',
+          color: '#065f46',
+          fontWeight: 700,
+          fontSize: '.84rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}>
+          <CheckCircle2 size={16} color="#059669" />
+          <span>Observation enregistrée pour <strong>{selectedChild?.prenom}</strong>.</span>
         </div>
       )}
 
-      {/* Form card */}
-      <div className="card" style={{ padding: '28px' }}>
-        {/* Presets */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 22, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '.78rem', fontWeight: 600, color: 'var(--text-sub)' }}>Exemples rapides :</span>
-          {PRESETS.map((p, i) => (
-            <button key={i} type="button" onClick={() => applyPreset(p)} className="btn btn-sm btn-secondary">
-              {p.label}
-            </button>
-          ))}
-        </div>
-
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          {/* Domain */}
-          <div className="field">
-            <label>1. Domaine observé en classe</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+      {/* Formulaire épuré */}
+      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,.02)' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {/* Choix du domaine */}
+          <div>
+            <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#334155', marginBottom: 8 }}>
+              1. Domaine observé en classe
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 8 }}>
               {DOMAINS.map(d => {
                 const sel = domaine === d.id;
                 return (
-                  <button key={d.id} type="button" onClick={() => setDomaine(d.id)} style={{
-                    padding: '12px 14px', borderRadius: 'var(--r-md)', border: sel ? '2px solid var(--brand-blue)' : '1.5px solid var(--border)',
-                    background: sel ? 'var(--blue-bg)' : 'var(--surface)', cursor: 'pointer', textAlign: 'left',
-                    transition: 'all var(--dur) var(--ease)',
-                  }}>
-                    <div style={{ fontWeight: 700, fontSize: '.87rem', color: sel ? 'var(--brand-blue)' : 'var(--gray-800)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button
+                    key={d.id}
+                    type="button"
+                    onClick={() => setDomaine(d.id)}
+                    style={{
+                      padding: '10px 12px',
+                      borderRadius: 10,
+                      border: sel ? '2px solid #2563eb' : '1px solid #e2e8f0',
+                      background: sel ? '#eff6ff' : '#ffffff',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all .15s ease',
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: '.84rem', color: sel ? '#1d4ed8' : '#1e293b', display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span>{d.icon}</span> {d.label}
                     </div>
-                    <p style={{ margin: '4px 0 0', fontSize: '.74rem', color: 'var(--text-sub)' }}>{d.desc}</p>
+                    <div style={{ fontSize: '.72rem', color: '#64748b', marginTop: 2 }}>{d.desc}</div>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Sliders */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, background: 'var(--gray-50)', borderRadius: 'var(--r-lg)', padding: '20px', border: '1px solid var(--border)' }}>
-            {/* Frequency */}
-            <div className="field">
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <label>Fréquence observée</label>
-                <span style={{ background: 'var(--brand-blue)', color: 'white', padding: '1px 10px', borderRadius: 99, fontSize: '.75rem', fontWeight: 700 }}>{FREQ_LABELS[frequence]}</span>
+          {/* Intensité / Fréquence */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, background: '#f8fafc', padding: 14, borderRadius: 10, border: '1px solid #e2e8f0' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.78rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+                <span>Fréquence</span>
+                <span style={{ color: '#2563eb' }}>{FREQ_LABELS[frequence]}</span>
               </div>
-              <input type="range" min={1} max={5} value={frequence} onChange={e => setFrequence(+e.target.value)} style={{ accentColor: 'var(--brand-blue)' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.7rem', color: 'var(--text-muted)' }}>
-                <span>Jamais</span><span>Quotidien</span>
-              </div>
+              <input
+                type="range"
+                min={1}
+                max={5}
+                value={frequence}
+                onChange={e => setFrequence(+e.target.value)}
+                style={{ width: '100%', accentColor: '#2563eb' }}
+              />
             </div>
-            {/* Impact */}
-            <div className="field">
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <label>Impact sur la scolarité</label>
-                <span style={{ background: '#1e40af', color: 'white', padding: '1px 10px', borderRadius: 99, fontSize: '.75rem', fontWeight: 700 }}>{IMPACT_LABELS[impact]}</span>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.78rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+                <span>Impact scolaire</span>
+                <span style={{ color: '#1d4ed8' }}>{IMPACT_LABELS[impact]}</span>
               </div>
-              <input type="range" min={1} max={5} value={impact} onChange={e => setImpact(+e.target.value)} style={{ accentColor: '#1e40af' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.7rem', color: 'var(--text-muted)' }}>
-                <span>Nul</span><span>Bloquant</span>
-              </div>
+              <input
+                type="range"
+                min={1}
+                max={5}
+                value={impact}
+                onChange={e => setImpact(+e.target.value)}
+                style={{ width: '100%', accentColor: '#1d4ed8' }}
+              />
             </div>
           </div>
 
-          {/* Textareas */}
-          <div className="field">
-            <label>2. Ce que vous avez observé en classe pour {selectedChild?.prenom || 'l\'élève'}</label>
-            <textarea rows={3} value={detail} onChange={e => setDetail(e.target.value)} required
-              placeholder="Ex: Pendant les activités de lecture individuelle, il quitte rapidement le texte des yeux..." />
+          {/* Observations concrètes */}
+          <div>
+            <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+              2. Description factuelle en classe pour {selectedChild?.prenom || 'l\'élève'}
+            </label>
+            <textarea
+              rows={3}
+              value={detail}
+              onChange={e => setDetail(e.target.value)}
+              required
+              placeholder="Décrivez ce que vous constatez précisément lors des exercices..."
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: '.85rem' }}
+            />
           </div>
 
-          <div className="field">
-            <label>3. Exemple concret observé</label>
-            <textarea rows={2} value={exemples} onChange={e => setExemples(e.target.value)}
-              placeholder="Ex: Hier lors de la dictée, il a demandé 3 fois qu'on répète la même phrase..." />
+          <div>
+            <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+              3. Exemple concret récent
+            </label>
+            <input
+              type="text"
+              value={exemples}
+              onChange={e => setExemples(e.target.value)}
+              placeholder="Ex: Lors de la dictée d'hier, a demandé 3 fois la répétition..."
+              style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: '.85rem' }}
+            />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button type="submit" disabled={loading} className="btn btn-primary btn-lg">
-              <Send size={16} />
-              {loading ? 'Envoi…' : `Transmettre l'observation pour ${selectedChild?.prenom || 'l\'élève'}`}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)',
+                color: 'white',
+                border: 'none',
+                padding: '10px 20px',
+                borderRadius: 8,
+                fontWeight: 700,
+                fontSize: '.86rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                boxShadow: '0 2px 8px rgba(37,99,235,.25)',
+              }}
+            >
+              <Send size={14} />
+              <span>{loading ? 'Transmission…' : `Transmettre l'observation (${selectedChild?.prenom || 'Élève'})`}</span>
             </button>
           </div>
         </form>
@@ -280,4 +275,3 @@ export default function EspaceEnseignant({ child, onObservationAdded, user, allC
     </div>
   );
 }
-
