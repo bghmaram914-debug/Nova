@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import db, { mockDatabase } from '../config/db.js';
 import { genererProfilComplet } from '../services/croisementService.js';
 import { calculerAdaptation } from '../services/adaptiveService.js';
+import { predireProbabilites } from '../services/aiModelService.js';
 
 // --- ENFANTS ---
 export const getEnfants = async (req, res) => {
@@ -264,8 +265,9 @@ export const getProfilExplicable = async (req, res) => {
 
   // Calcul du profil avec l'algorithme explicable (sans boîte noire)
   const profilExplicable = genererProfilComplet(enfantId, observations, activites, consentement);
+  const probabilitesModele = predireProbabilites(observations);
 
-  return res.json(profilExplicable);
+  return res.json({ ...profilExplicable, probabilitesModele });
 };
 
 // Endpoint de réinitialisation de la démo
