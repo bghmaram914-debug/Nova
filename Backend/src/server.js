@@ -16,6 +16,8 @@ import {
   enregistrerActivite,
   adapterDifficulteJeu,
   getProfilExplicable,
+  getModelInfo,
+  predireProfilIA,
   resetDemoData
 } from './controllers/apiController.js';
 
@@ -62,6 +64,10 @@ app.post('/api/activites/adapter', adapterDifficulteJeu);
 
 // Route Cœur : Moteur de Croisement Explicable (Bouton Pourquoi ?)
 app.get('/api/profil-explicable/:enfantId', getProfilExplicable);
+
+// Routes Modèle IA Embarqué (v4 - Entraîné sur 2 135 cohortes)
+app.get('/api/ai/model-info', getModelInfo);
+app.post('/api/ai/predict', predireProfilIA);
 
 // Réinitialisation démo
 app.post('/api/demo/reset', resetDemoData);
