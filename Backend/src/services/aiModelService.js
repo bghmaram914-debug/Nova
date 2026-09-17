@@ -1,21 +1,3 @@
-/**
- * NOVA — Modèle IA en JavaScript pur (aucun Python nécessaire)
- * ================================================================
- * Emplacement recommandé : Backend/src/services/aiModelService.js
- *
- * Ce fichier refait EXACTEMENT le même calcul que le modèle Python
- * entraîné (régression logistique multinomiale / softmax), à partir
- * des coefficients exportés dans nova_model.json.
- *
- * Aucune installation supplémentaire : juste ce fichier + le JSON.
- *
- * IMPORTANT — Place dans NOVA :
- *   Ce module est un COMPLÉMENT au moteur de règles (croisementService.js),
- *   jamais un remplacement. Le moteur de règles reste la source de vérité,
- *   intégralement traçable. Ce modèle sert seulement à hiérarchiser les
- *   profils probables, à titre indicatif, à côté du "Pourquoi ?".
- */
-
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -25,11 +7,6 @@ const MODELE = JSON.parse(
   readFileSync(join(__dirname, '..', '..', 'ml', 'nova_model.json'), 'utf-8')
 );
 
-/**
- * Normalise un tableau d'observations (format DB/mockDatabase)
- * vers l'objet structuré attendu par le modèle :
- * { enseignant: {domaine: score}, parent: {...}, specialiste: {...} }
- */
 function normaliserObservations(obsInput) {
   if (!obsInput) return {};
   if (!Array.isArray(obsInput)) return obsInput;
@@ -41,7 +18,7 @@ function normaliserObservations(obsInput) {
     let acteur = 'enseignant';
     if (role === 'ENSEIGNANT' || obs.contexte === 'ECOLE') {
       acteur = 'enseignant';
-    } else if (role === 'PARENT' || obs.contexte === 'MAISON') {
+    } else if (role === 'PARENT' || role === 'FAMILLE' || obs.contexte === 'MAISON' || obs.contexte === 'FAMILLE') {
       acteur = 'parent';
     } else if (role === 'SPECIALISTE' || obs.contexte === 'CABINET') {
       acteur = 'specialiste';
@@ -73,18 +50,11 @@ function normaliserObservations(obsInput) {
   return result;
 }
 
-/**
- * Construit le vecteur de features dans le MÊME ORDRE que l'entraînement.
- * observations attendu : { enseignant: {domaine: score}, parent: {...}, specialiste: {...} }
- * ou un tableau d'observations brutes
- * scores attendus sur l'échelle 0 (Non) - 1 (Parfois) - 2 (Oui)
- */
 function construireFeatures(obsRaw) {
   const observations = normaliserObservations(obsRaw);
   const { domaines, acteurs, feature_cols } = MODELE;
   const valeurs = {};
 
-  // Scores bruts par acteur x domaine
   for (const acteur of acteurs) {
     for (const domaine of domaines) {
       const v = observations?.[acteur]?.[domaine];
@@ -92,8 +62,6 @@ function construireFeatures(obsRaw) {
     }
   }
 
-  // Indices de croisement (convergence, divergence, intensité) — identiques
-  // à ceux calculés côté entraînement Python
   for (const domaine of domaines) {
     const scores = acteurs
       .map((a) => valeurs[`${a}_${domaine}`])
@@ -106,18 +74,14 @@ function construireFeatures(obsRaw) {
       scoresValides.reduce((a, b) => a + b, 0) / scoresValides.length;
   }
 
-  // Imputation simple des valeurs manquantes par 0 (les indices de
-  // croisement ci-dessus gèrent déjà l'essentiel de l'information)
   return feature_cols.map((col) => (Number.isNaN(valeurs[col]) ? 0 : valeurs[col]));
 }
 
-/** Standardisation identique au StandardScaler de scikit-learn */
 function standardiser(vecteur) {
   const { mean, scale } = MODELE.scaler;
   return vecteur.map((v, i) => (v - mean[i]) / scale[i]);
 }
 
-/** Softmax numériquement stable */
 function softmax(scores) {
   const max = Math.max(...scores);
   const exps = scores.map((s) => Math.exp(s - max));
@@ -125,11 +89,6 @@ function softmax(scores) {
   return exps.map((e) => e / somme);
 }
 
-/**
- * Calcule les probabilités par profil pour un enfant donné.
- * Reproduit exactement predict_proba() de scikit-learn (LogisticRegression,
- * solver lbfgs, multinomial) — vérifié numériquement contre le modèle Python.
- */
 function predireProbabilites(observations) {
   const x = standardiser(construireFeatures(observations));
   const { coef, intercept } = MODELE.logistic_regression;
