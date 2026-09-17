@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import db, { mockDatabase } from '../config/db.js';
 import { genererProfilComplet } from '../services/croisementService.js';
 import { calculerAdaptation } from '../services/adaptiveService.js';
-import { predireProbabilites } from '../services/aiModelService.js';
+import { predireProbabilites, MODELE } from '../services/aiModelService.js';
 
 // --- ENFANTS ---
 export const getEnfants = async (req, res) => {
@@ -446,8 +446,33 @@ export const getProfilExplicable = async (req, res) => {
   return res.json({ ...profilExplicable, probabilitesModele });
 };
 
+// --- ENDPOINTS MODÈLE IA EMBARQUÉ (v4) ---
+export const getModelInfo = (req, res) => {
+  return res.json({
+    version: MODELE.version,
+    domaines: MODELE.domaines,
+    acteurs: MODELE.acteurs,
+    classes: MODELE.classes,
+    metriques: MODELE.metriques,
+    libelles: MODELE.libelles,
+    avertissement: MODELE.avertissement
+  });
+};
+
+export const predireProfilIA = (req, res) => {
+  const { observations } = req.body;
+  const probabilites = predireProbabilites(observations || []);
+  return res.json({
+    version: MODELE.version,
+    probabilites,
+    topProfil: probabilites[0] || null,
+    confiance: probabilites[0]?.probabilite || 0
+  });
+};
+
 // Endpoint de réinitialisation de la démo
 export const resetDemoData = (req, res) => {
   // Rétablir les données de base pour la démo jury
   return res.json({ success: true, message: 'Données de démo réinitialisées' });
 };
+

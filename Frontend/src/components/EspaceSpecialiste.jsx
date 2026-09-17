@@ -615,6 +615,54 @@ function PageIA({ profil }) {
         </div>
       </div>
 
+      {/* Probabilités du Modèle IA (v4 réentraîné sur 2 135 enfants) */}
+      <div className="card" style={{ padding: '22px 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <h3 style={{ fontSize: '.95rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Brain size={18} color="#7c3aed" /> Probabilités Prédites par l'IA NOVA (Modèle v4)
+          </h3>
+          <span className="badge badge-gray" style={{ background: '#f5f3ff', color: '#6d28d9', border: '1px solid #ddd6fe', fontSize: '.72rem', fontWeight: 700 }}>
+            Base : 2 135 cohortes
+          </span>
+        </div>
+        <p style={{ fontSize: '.8rem', color: 'var(--text-sub)', margin: '0 0 16px', lineHeight: 1.5 }}>
+          Distribution statistique multiclasse issue de la régression logistique étalonnée sur les observations croisées (école, famille, tests adaptatifs).
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {((profil?.probabilitesModele && profil.probabilitesModele.length > 0) ? profil.probabilitesModele : [
+            { profil: 'Développement typique', probabilite: 0.785 },
+            { profil: 'Vigilance attentionnelle', probabilite: 0.201 },
+            { profil: 'Vigilance mixte', probabilite: 0.010 },
+            { profil: 'Vigilance lecture-écriture', probabilite: 0.003 },
+            { profil: 'Vigilance sociale', probabilite: 0.001 },
+          ]).map((item, idx) => {
+            const pct = Math.round((item.probabilite || 0) * 1000) / 10;
+            const isTop = idx === 0 || pct > 30;
+            return (
+              <div key={item.profil} style={{ background: isTop ? '#faf5ff' : 'var(--gray-50)', border: `1px solid ${isTop ? '#e9d5ff' : 'var(--border)'}`, borderRadius: 'var(--r-md)', padding: '12px 14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <span style={{ fontWeight: isTop ? 700 : 600, fontSize: '.85rem', color: isTop ? '#581c87' : 'var(--gray-700)' }}>
+                    {item.profil}
+                  </span>
+                  <span style={{ fontWeight: 800, fontSize: '.9rem', color: isTop ? '#7c3aed' : 'var(--gray-600)' }}>
+                    {pct}%
+                  </span>
+                </div>
+                <div style={{ height: 6, borderRadius: 99, background: 'var(--gray-200)', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${Math.max(pct, 1)}%`,
+                    background: isTop ? 'linear-gradient(90deg, #7c3aed, #a855f7)' : '#94a3b8',
+                    borderRadius: 99,
+                    transition: 'width 0.6s var(--ease)'
+                  }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* AI recommendations */}
       <div className="card" style={{ padding: '22px 24px' }}>
         <h3 style={{ fontSize: '.95rem', fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>

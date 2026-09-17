@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { GraduationCap, Users, Stethoscope, Eye, EyeOff, ArrowRight, ShieldCheck, HeartHandshake, Award, UserPlus, LogIn, MapPin, Building, Sparkles } from 'lucide-react';
+import { GraduationCap, Users, Stethoscope, Eye, EyeOff, ArrowRight, ShieldCheck, HeartHandshake, Award, UserPlus, LogIn, MapPin, Building } from 'lucide-react';
 
 const SPACES = [
   {
@@ -57,7 +57,6 @@ export default function LoginPage({ onLoginSuccess }) {
   const [etablissement, setEtablissement] = useState('');
   const [specialite, setSpecialite] = useState('');
   const [gouvernorat, setGouvernorat] = useState('Tunis');
-  const [consentementInadp, setConsentementInadp] = useState(true);
 
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
