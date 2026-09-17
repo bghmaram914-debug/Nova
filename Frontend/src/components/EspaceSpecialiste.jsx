@@ -185,69 +185,247 @@ function LongitudinalChart({ data, metric }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// BILAN CLINIQUE PÉDOPSYCHIATRIQUE — EXPORT & TÉLÉCHARGEMENT PDF
+// GÉNÉRATEUR ET TÉLÉCHARGEMENT DIRECT DE FICHIER PDF (jsPDF)
+// ─────────────────────────────────────────────────────────────
+export const generateAndDownloadNovaPDF = (child, profil) => {
+  try {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    const childName = `${child?.prenom || 'Youssef'} ${child?.nom_anonyme || 'B.'}`;
+    const childCode = child?.code_identifiant || 'TN-NOVA-2026-084';
+    const ageNiveau = `${child?.age || 7} ans · ${child?.niveau_scolaire || '2ème Année Primaire'}`;
+    const etablissement = child?.etablissement || 'École Primaire Habib Bourguiba - Tunis';
+    const today = new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // 1. Bandeau supérieur institutionnel
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, 210, 22, 'F');
+
+    doc.setTextColor(239, 68, 68);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text("RÉPUBLIQUE TUNISIENNE", 14, 9);
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text("· MINISTÈRE DE LA SANTÉ PUBLIQUE & MINISTÈRE DE L'ÉDUCATION", 58, 9);
+
+    doc.setTextColor(148, 163, 184);
+    doc.setFontSize(7.2);
+    doc.text("OBSERVATOIRE DES TROUBLES NEURODÉVELOPPEMENTAUX (TND) · PROTOCOLE NATIONAL", 14, 16);
+
+    doc.setTextColor(110, 231, 183);
+    doc.text("Conforme Loi INADP 2004-63", 152, 16);
+
+    // 2. Titre et Date
+    doc.setTextColor(29, 78, 216);
+    doc.setFontSize(15);
+    doc.setFont('helvetica', 'bold');
+    doc.text("NOVA TUNISIE — BILAN CLINIQUE DE SYNTHÈSE", 14, 34);
+
+    doc.setTextColor(71, 85, 105);
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Compte-rendu Pédopsychiatrique & Recommandations d'Aménagements · Édition du ${today}`, 14, 40);
+
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.4);
+    doc.line(14, 43, 196, 43);
+
+    // 3. Fiche Patient
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(203, 213, 225);
+    doc.roundedRect(14, 47, 182, 25, 2.5, 2.5, 'FD');
+
+    doc.setTextColor(100, 116, 139);
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text("CODE PATIENT SÉCURISÉ", 18, 54);
+    doc.text("IDENTITÉ DU PATIENT", 80, 54);
+    doc.text("ÂGE & SCOLARITÉ", 140, 54);
+
+    doc.setTextColor(29, 78, 216);
+    doc.setFontSize(10.5);
+    doc.text(childCode, 18, 60);
+
+    doc.setTextColor(15, 23, 42);
+    doc.text(childName, 80, 60);
+    doc.text(ageNiveau, 140, 60);
+
+    doc.setTextColor(71, 85, 105);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Structure d'accueil : ${etablissement}`, 18, 67);
+
+    // 4. Signaux neurodéveloppementaux
+    let y = 79;
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(10.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text("1. SIGNAUX NEURODÉVELOPPEMENTAUX DÉTECTÉS PAR DOMAINE", 14, y);
+    y += 5;
+
+    const signals = (profil?.signals && profil.signals.length > 0) ? profil.signals : [
+      { domaine: 'ATTENTION', libelle: 'Attention & Consignes', niveau: 'SIGNAL_FORT', description: 'Convergence multi-acteurs forte sur les difficultés de maintien attentionnel et de distractibilité.' },
+      { domaine: 'MOTRICITE', libelle: 'Motricité fine & Graphisme', niveau: 'SIGNAL_CONTEXTUEL', description: 'Difficulté en milieu scolaire lors de la copie rapide et tenue crispée du stylo.' },
+      { domaine: 'MEMOIRE', libelle: 'Mémoire de travail', niveau: 'SIGNAL_CONTEXTUEL', description: 'Fatigabilité lors des tâches impliquant une double consigne séquentielle.' },
+      { domaine: 'COMPORTEMENT', libelle: 'Comportement & Régulation', niveau: 'PAS_DE_SIGNAL', description: 'Comportement adapté et bonne intégration avec les pairs et la fratrie.' }
+    ];
+
+    signals.forEach((s) => {
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(226, 232, 240);
+      doc.roundedRect(14, y, 182, 17, 2, 2, 'FD');
+
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text(s.libelle, 18, y + 5.5);
+
+      // Badge
+      if (s.niveau === 'SIGNAL_FORT') {
+        doc.setFillColor(254, 226, 226);
+        doc.roundedRect(142, y + 2, 48, 5.5, 1.5, 1.5, 'F');
+        doc.setTextColor(185, 28, 28);
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'bold');
+        doc.text("SIGNAL FORT (Priorité)", 145, y + 5.8);
+      } else if (s.niveau === 'SIGNAL_CONTEXTUEL') {
+        doc.setFillColor(254, 243, 199);
+        doc.roundedRect(142, y + 2, 48, 5.5, 1.5, 1.5, 'F');
+        doc.setTextColor(180, 83, 9);
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'bold');
+        doc.text("SIGNAL CONTEXTUEL", 145, y + 5.8);
+      } else {
+        doc.setFillColor(241, 245, 249);
+        doc.roundedRect(142, y + 2, 48, 5.5, 1.5, 1.5, 'F');
+        doc.setTextColor(100, 116, 139);
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'bold');
+        doc.text("PAS DE SIGNAL MAJEUR", 145, y + 5.8);
+      }
+
+      doc.setTextColor(71, 85, 105);
+      doc.setFontSize(7.8);
+      doc.setFont('helvetica', 'normal');
+      const splitDesc = doc.splitTextToSize(s.description, 172);
+      doc.text(splitDesc, 18, y + 11);
+
+      y += 20;
+    });
+
+    // 5. Préconisations médicales
+    y += 2;
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(10.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text("2. PRÉCONISATIONS MÉDICALES & AMÉNAGEMENTS SCOLAIRES", 14, y);
+    y += 5;
+
+    doc.setFillColor(240, 253, 244);
+    doc.setDrawColor(167, 243, 208);
+    doc.roundedRect(14, y, 182, 32, 2.5, 2.5, 'FD');
+
+    doc.setTextColor(6, 95, 70);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    const recos = [
+      "- Bilan neuropsychologique approfondi : Évaluation des fonctions exécutives et de l'attention soutenue.",
+      "- Aménagements scolaires en classe : Majoration du temps (+25%), simplification des doubles consignes.",
+      "- Aménagement ergonomique : Placement face au tableau pour limiter les distracteurs visuels et sonores.",
+      "- Suivi collaboratif & contrôle : Réévaluation pluridisciplinaire planifiée à 3 mois via NOVA Tunisie."
+    ];
+    let ry = y + 6;
+    recos.forEach(r => {
+      doc.text(r, 18, ry);
+      ry += 6;
+    });
+
+    // 6. Signatures et Visas
+    y += 38;
+    doc.setFillColor(250, 250, 250);
+    doc.setDrawColor(226, 232, 240);
+
+    // Bloc Praticien
+    doc.roundedRect(14, y, 88, 36, 2, 2, 'FD');
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Praticien Rédacteur", 18, y + 5.5);
+    doc.setTextColor(29, 78, 216);
+    doc.text("Dr. Anis Ben Salah", 18, y + 11);
+    doc.setTextColor(71, 85, 105);
+    doc.setFontSize(7.2);
+    doc.setFont('helvetica', 'normal');
+    doc.text("Pédopsychiatre Référent · Hôpital Razi / Tunis", 18, y + 16);
+    doc.text("N° Ordre des Médecins : 18452/TN", 18, y + 20.5);
+    doc.setDrawColor(203, 213, 225);
+    doc.line(18, y + 25, 96, y + 25);
+    doc.setTextColor(148, 163, 184);
+    doc.text("Signature & Cachet Médical :", 18, y + 30);
+
+    // Bloc Commission
+    doc.roundedRect(108, y, 88, 36, 2, 2, 'FD');
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Structure Destinataire", 112, y + 5.5);
+    doc.setTextColor(5, 150, 105);
+    doc.text("Commission Médicale Scolaire & CNAM", 112, y + 11);
+    doc.setTextColor(71, 85, 105);
+    doc.setFontSize(7.2);
+    doc.setFont('helvetica', 'normal');
+    doc.text("Ministère de l'Éducation · Direction Régionale", 112, y + 16);
+    doc.text("Dossier d'adaptation pédagogique", 112, y + 20.5);
+    doc.setDrawColor(203, 213, 225);
+    doc.line(112, y + 25, 190, y + 25);
+    doc.setTextColor(148, 163, 184);
+    doc.text("Visa de Réception & Décision :", 112, y + 30);
+
+    // 7. Pied de page
+    doc.setTextColor(148, 163, 184);
+    doc.setFontSize(7);
+    doc.text("NOVA TUNISIE — Document officiel généré sous contrôle médical (Loi INADP n° 2004-63).", 14, 288);
+    doc.text("Page 1 / 1", 188, 288);
+
+    // Sauvegarde et déclenchement automatique du téléchargement
+    const sanitizedName = (child?.nom_anonyme || child?.prenom || 'Enfant').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const filename = `Bilan_Pedopsychiatrique_NOVA_${sanitizedName}_${childCode}.pdf`;
+    doc.save(filename);
+    return true;
+  } catch (err) {
+    console.error('Erreur directe jsPDF:', err);
+    window.print();
+    return false;
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// MODAL D'APERÇU & TÉLÉCHARGEMENT DU BILAN PDF
 // ─────────────────────────────────────────────────────────────
 function MdphReport({ child, profil, onClose }) {
-  const reportRef = useRef(null);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const today = new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
-
   const childName = child?.nom_anonyme || child?.prenom || 'Enfant';
   const childCode = child?.code_identifiant || 'TN-NOVA-2026-084';
 
-  const handleDownloadPDF = async () => {
-    if (!reportRef.current || isDownloading) return;
+  const handleDownloadPDF = () => {
     setIsDownloading(true);
-
-    try {
-      const element = reportRef.current;
-      
-      // Capture canvas haute résolution
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: element.scrollWidth,
-      });
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // Première page
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-
-      // Pages supplémentaires si nécessaire
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
-      }
-
-      // Télécharger le fichier PDF
-      const sanitizedName = childName.replace(/[^a-zA-Z0-9_-]/g, '_');
-      const filename = `Bilan_Pedopsychiatrique_NOVA_${sanitizedName}_${childCode}.pdf`;
-      pdf.save(filename);
-    } catch (err) {
-      console.error('Erreur lors du téléchargement du PDF:', err);
-      window.print();
-    } finally {
+    setTimeout(() => {
+      const success = generateAndDownloadNovaPDF(child, profil);
       setIsDownloading(false);
-    }
+      if (success) {
+        setDownloadSuccess(true);
+        setTimeout(() => setDownloadSuccess(false), 4000);
+      }
+    }, 100);
   };
 
   return (
@@ -307,8 +485,29 @@ function MdphReport({ child, profil, onClose }) {
           </div>
         </div>
 
+        {/* Confirmation de téléchargement réussi */}
+        {downloadSuccess && (
+          <div style={{
+            background: '#ecfdf5',
+            border: '1.5px solid #a7f3d0',
+            borderRadius: 12,
+            padding: '12px 20px',
+            margin: '16px 24px 0',
+            color: '#065f46',
+            fontWeight: 700,
+            fontSize: '.85rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            boxShadow: '0 2px 8px rgba(5,150,105,0.1)'
+          }}>
+            <CheckCircle2 size={18} color="#059669" />
+            <span>Fichier PDF téléchargé avec succès dans vos Téléchargements : <code>Bilan_Pedopsychiatrique_NOVA_{childName.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf</code></span>
+          </div>
+        )}
+
         {/* Print & Export PDF Area */}
-        <div ref={reportRef} className="print-zone" style={{ padding: '32px 36px', background: 'white' }}>
+        <div className="print-zone" style={{ padding: '32px 36px', background: 'white' }}>
           {/* Entête Officielle Tunisie */}
           <div style={{ borderBottom: '2px solid #0f172a', paddingBottom: 14, marginBottom: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -1019,7 +1218,25 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
 
           {/* Export PDF button */}
           <div style={{ paddingTop: 14, borderTop: '1px solid var(--border)' }}>
-            <button onClick={() => setShowMdph(true)} className="btn btn-sm" style={{ width: '100%', background: '#059669', color: 'white', boxShadow: '0 2px 8px rgba(5,150,105,.25)', justifyContent: 'center', borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button
+              onClick={() => {
+                generateAndDownloadNovaPDF(selectedChild || child, profil);
+                setShowMdph(true);
+              }}
+              className="btn btn-sm"
+              style={{
+                width: '100%',
+                background: '#059669',
+                color: 'white',
+                boxShadow: '0 2px 8px rgba(5,150,105,.25)',
+                justifyContent: 'center',
+                borderRadius: 'var(--r-md)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontWeight: 700
+              }}
+            >
               <Download size={14} /> Télécharger Bilan PDF
             </button>
           </div>
@@ -1041,7 +1258,16 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
               {page === 'jeux'        && <PageJeux jeux={jeux} />}
               {page === 'longitudinal'&& <PageLongitudinal />}
               {page === 'ia_signaux'  && <PageIA profil={profil} />}
-              {page === 'decision'    && <PageDecision child={selectedChild || child} profil={profil} onExportPDF={() => setShowMdph(true)} />}
+              {page === 'decision'    && (
+                <PageDecision
+                  child={selectedChild || child}
+                  profil={profil}
+                  onExportPDF={() => {
+                    generateAndDownloadNovaPDF(selectedChild || child, profil);
+                    setShowMdph(true);
+                  }}
+                />
+              )}
             </>
           )}
         </main>
