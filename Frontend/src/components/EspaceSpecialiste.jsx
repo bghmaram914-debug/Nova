@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Stethoscope, AlertTriangle, CheckCircle2, Clock, FileText, X,
   School, Home, Gamepad2, Sparkles, Download, Users, Brain,
   TrendingUp, BarChart3, Bot, Save, Activity, ShieldCheck,
   User, Printer, Calendar, Filter, Check, Target, FileCheck,
-  ArrowUpRight, Search, ChevronRight, Info
+  ArrowUpRight, Search, ChevronRight, Info, Loader2
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // ─────────────────────────────────────────────────────────────
 // MOCK DATA
@@ -183,87 +185,229 @@ function LongitudinalChart({ data, metric }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// MDPH PRINT REPORT
+// BILAN CLINIQUE PÉDOPSYCHIATRIQUE — EXPORT & TÉLÉCHARGEMENT PDF
 // ─────────────────────────────────────────────────────────────
 function MdphReport({ child, profil, onClose }) {
+  const reportRef = useRef(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   const today = new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const childName = child?.nom_anonyme || child?.prenom || 'Enfant';
+  const childCode = child?.code_identifiant || 'TN-NOVA-2026-084';
+
+  const handleDownloadPDF = async () => {
+    if (!reportRef.current || isDownloading) return;
+    setIsDownloading(true);
+
+    try {
+      const element = reportRef.current;
+      
+      // Capture canvas haute résolution
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: element.scrollWidth,
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Première page
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      // Pages supplémentaires si nécessaire
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      // Télécharger le fichier PDF
+      const sanitizedName = childName.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `Bilan_Pedopsychiatrique_NOVA_${sanitizedName}_${childCode}.pdf`;
+      pdf.save(filename);
+    } catch (err) {
+      console.error('Erreur lors du téléchargement du PDF:', err);
+      window.print();
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.55)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, backdropFilter: 'blur(6px)' }} className="fade-in">
-      <div style={{ background: 'white', borderRadius: 'var(--r-2xl)', width: '100%', maxWidth: 700, maxHeight: '90vh', overflow: 'auto', boxShadow: 'var(--sh-xl)' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.65)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, backdropFilter: 'blur(6px)' }} className="fade-in">
+      <div style={{ background: 'white', borderRadius: 'var(--r-2xl)', width: '100%', maxWidth: 740, maxHeight: '92vh', overflow: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.35)' }}>
+        
         {/* Modal header */}
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '18px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fafc' }}>
           <div>
-            <h3 style={{ fontWeight: 800, fontSize: '1rem', margin: 0 }}>Export PDF — Bilan MDPH / Orthophoniste</h3>
-            <p style={{ fontSize: '.78rem', color: 'var(--text-sub)', margin: '2px 0 0' }}>Compte-rendu officiel normé</p>
+            <h3 style={{ fontWeight: 800, fontSize: '1.05rem', margin: 0, color: '#0f172a' }}>
+              Bilan Pédopsychiatrique Officiel — {childName}
+            </h3>
+            <p style={{ fontSize: '.78rem', color: 'var(--text-sub)', margin: '2px 0 0' }}>
+              Format normé · Conforme INADP Loi n° 2004-63 (Tunisie)
+            </p>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => window.print()} className="btn btn-primary btn-sm"><Printer size={14} /> Imprimer / Enregistrer PDF</button>
-            <button onClick={onClose} className="btn btn-secondary btn-sm"><X size={14} /></button>
+          
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={isDownloading}
+              className="btn btn-primary btn-sm"
+              style={{
+                background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                borderColor: '#059669',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontWeight: 700,
+                boxShadow: '0 4px 12px rgba(5,150,105,.3)'
+              }}
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  <span>Génération du PDF…</span>
+                </>
+              ) : (
+                <>
+                  <Download size={15} />
+                  <span>Télécharger le PDF</span>
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={() => window.print()}
+              className="btn btn-secondary btn-sm"
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <Printer size={14} /> Imprimer
+            </button>
+
+            <button onClick={onClose} className="btn btn-secondary btn-sm" style={{ padding: '6px 10px' }}>
+              <X size={16} />
+            </button>
           </div>
         </div>
 
-        {/* Print area */}
-        <div className="print-zone" style={{ padding: '28px 32px' }}>
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #1d4ed8', paddingBottom: 14, marginBottom: 20 }}>
-            <div>
-              <div style={{ fontWeight: 900, fontSize: '1.3rem', color: '#1d4ed8', letterSpacing: '-.02em' }}>NOVA</div>
-              <div style={{ fontSize: '.75rem', color: '#64748b' }}>Plateforme de Détection Précoce Collaborative</div>
-            </div>
-            <div style={{ textAlign: 'right', fontSize: '.78rem', color: '#64748b' }}>
-              <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 2 }}>BILAN DE SYNTHÈSE PLURIDISCIPLINAIRE</div>
-              <div>Document confidentiel · RGPD art. 89</div>
-              <div>Date d'édition : {today}</div>
-            </div>
-          </div>
-
-          {/* Patient */}
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: '14px 18px', marginBottom: 20 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, fontSize: '.82rem' }}>
-              <div><div style={{ color: '#64748b', fontSize: '.7rem', marginBottom: 2 }}>CODE PATIENT</div><div style={{ fontWeight: 800, color: '#1d4ed8' }}>{child?.code_identifiant || 'NOVA-2026-084'}</div></div>
-              <div><div style={{ color: '#64748b', fontSize: '.7rem', marginBottom: 2 }}>PRÉNOM (ANONYMISÉ)</div><div style={{ fontWeight: 700 }}>{child?.prenom} {child?.nom_anonyme || 'M.'}</div></div>
-              <div><div style={{ color: '#64748b', fontSize: '.7rem', marginBottom: 2 }}>ÂGE / NIVEAU</div><div style={{ fontWeight: 700 }}>{child?.age} ans · {child?.niveau_scolaire}</div></div>
-            </div>
-          </div>
-
-          {/* Signals */}
-          <h4 style={{ fontSize: '.88rem', fontWeight: 800, marginBottom: 12, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '.05em' }}>Signaux détectés par domaine</h4>
-          {(profil?.signals || MOCK_PROFILE.signals).map(s => (
-            <div key={s.domaine} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: '12px 14px', marginBottom: 8, display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-              <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{DOMAIN_ICONS[s.domaine]}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontWeight: 700, fontSize: '.88rem' }}>{s.libelle}</span>
-                  <SignalBadge niveau={s.niveau} />
+        {/* Print & Export PDF Area */}
+        <div ref={reportRef} className="print-zone" style={{ padding: '32px 36px', background: 'white' }}>
+          {/* Entête Officielle Tunisie */}
+          <div style={{ borderBottom: '2px solid #0f172a', paddingBottom: 14, marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ fontSize: '.72rem', fontWeight: 800, color: '#dc2626', letterSpacing: '.04em' }}>
+                  🇹🇳 RÉPUBLIQUE TUNISIENNE · MINISTÈRE DE LA SANTÉ PUBLIQUE
                 </div>
-                <p style={{ margin: 0, fontSize: '.8rem', color: '#475569', lineHeight: 1.5 }}>{s.description}</p>
+                <div style={{ fontWeight: 900, fontSize: '1.45rem', color: '#1d4ed8', letterSpacing: '-.02em', marginTop: 2 }}>
+                  NOVA TUNISIE
+                </div>
+                <div style={{ fontSize: '.78rem', color: '#475569', fontWeight: 600 }}>
+                  Observatoire National & Détection Précoce des TND (TSA · TDAH · Dys)
+                </div>
+              </div>
+
+              <div style={{ textAlign: 'right', fontSize: '.76rem', color: '#475569' }}>
+                <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '.85rem', marginBottom: 2 }}>
+                  BILAN DE SYNTHÈSE PÉDOPSYCHIATRIQUE
+                </div>
+                <div style={{ color: '#059669', fontWeight: 600 }}>Secret Médical · Loi INADP n° 2004-63</div>
+                <div>Date d'édition : <strong>{today}</strong></div>
               </div>
             </div>
-          ))}
+          </div>
 
-          {/* Recommendations */}
-          <h4 style={{ fontSize: '.88rem', fontWeight: 800, margin: '20px 0 10px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '.05em' }}>Recommandations préliminaires</h4>
-          <div style={{ background: '#f0fdf4', border: '1px solid #a7f3d0', borderRadius: 8, padding: '14px 16px', fontSize: '.83rem', color: '#065f46' }}>
-            <ul style={{ margin: 0, paddingLeft: 16, lineHeight: 2 }}>
-              <li>Bilan neuropsychologique complet recommandé (attention soutenue, mémoire de travail)</li>
-              <li>Mise en place d'aménagements scolaires provisoires (tiers-temps, consignes simplifiées)</li>
-              <li>Consultation orthophonique à envisager si les signaux persistent</li>
-              <li>Réévaluation à 3 mois avec le présent outil NOVA</li>
+          {/* Fiche Patient */}
+          <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 12, padding: '16px 20px', marginBottom: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, fontSize: '.84rem' }}>
+              <div>
+                <div style={{ color: '#64748b', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase' }}>CODE PATIENT SÉCURISÉ</div>
+                <div style={{ fontWeight: 800, color: '#1d4ed8', fontSize: '1rem' }}>{childCode}</div>
+              </div>
+              <div>
+                <div style={{ color: '#64748b', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase' }}>IDENTITÉ / PRÉNOM</div>
+                <div style={{ fontWeight: 800, color: '#0f172a' }}>{child?.prenom || 'Youssef'} {child?.nom_anonyme || 'B.'}</div>
+              </div>
+              <div>
+                <div style={{ color: '#64748b', fontSize: '.72rem', fontWeight: 700, textTransform: 'uppercase' }}>ÂGE & SCOLARITÉ</div>
+                <div style={{ fontWeight: 700, color: '#0f172a' }}>{child?.age || 7} ans · {child?.niveau_scolaire || '2ème Année Primaire'}</div>
+              </div>
+            </div>
+            <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #e2e8f0', fontSize: '.78rem', color: '#64748b' }}>
+              Établissement : <strong style={{ color: '#334155' }}>{child?.etablissement || 'École Primaire Habib Bourguiba - Tunis'}</strong>
+            </div>
+          </div>
+
+          {/* Signaux détectés par domaine */}
+          <h4 style={{ fontSize: '.88rem', fontWeight: 800, marginBottom: 12, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '.05em', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Brain size={16} color="#2563eb" /> Signaux Neurodéveloppementaux Détectés
+          </h4>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+            {(profil?.signals || MOCK_PROFILE.signals).map(s => (
+              <div key={s.domaine} style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 16px', display: 'flex', gap: 14, alignItems: 'flex-start', background: '#ffffff' }}>
+                <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>{DOMAIN_ICONS[s.domaine]}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontWeight: 800, fontSize: '.88rem', color: '#1e293b' }}>{s.libelle}</span>
+                    <SignalBadge niveau={s.niveau} />
+                  </div>
+                  <p style={{ margin: 0, fontSize: '.82rem', color: '#475569', lineHeight: 1.5 }}>{s.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Recommandations préliminaires & Aménagements */}
+          <h4 style={{ fontSize: '.88rem', fontWeight: 800, margin: '20px 0 10px', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '.05em', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <CheckCircle2 size={16} color="#059669" /> Préconisations Cliniques & Aménagements Scolaires
+          </h4>
+          <div style={{ background: '#f0fdf4', border: '1.5px solid #a7f3d0', borderRadius: 10, padding: '16px 18px', fontSize: '.84rem', color: '#065f46' }}>
+            <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.8 }}>
+              <li><strong>Bilan neuropsychologique complet :</strong> Évaluation de l'attention soutenue, des fonctions exécutives et de la mémoire de travail.</li>
+              <li><strong>Aménagements pédagogiques :</strong> Simplification des consignes écrites, temps majoré (+25%), placement au premier rang en classe.</li>
+              <li><strong>Bilan orthophonique :</strong> Analyse fine du langage et de la coordination motrice fine.</li>
+              <li><strong>Suivi collaboratif :</strong> Réévaluation de contrôle à 3 mois via le portail NOVA Tunisie.</li>
             </ul>
           </div>
 
-          {/* Signature */}
-          <div style={{ marginTop: 28, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-            <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: '14px 16px', fontSize: '.78rem', color: '#64748b' }}>
-              <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>Praticien rédacteur</div>
-              <div>Dr. Claire Laurent — Neuropsychologue</div>
-              <div>N° RPPS : 10004567891</div>
-              <div style={{ marginTop: 20, borderTop: '1px solid #e2e8f0', paddingTop: 10 }}>Signature & Cachet :</div>
+          {/* Bloc de Signature & Cachet Officiel */}
+          <div style={{ marginTop: 28, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+            <div style={{ border: '1.5px solid #e2e8f0', borderRadius: 10, padding: '14px 16px', fontSize: '.78rem', color: '#64748b', background: '#fafafa' }}>
+              <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>Médecin / Praticien Rédacteur</div>
+              <div style={{ fontWeight: 700, color: '#1d4ed8' }}>Dr. Anis Ben Salah</div>
+              <div>Pédopsychiatre Référent · Hôpital Razi / Tunis</div>
+              <div>N° Inscription Conseil de l'Ordre : 18452/TN</div>
+              <div style={{ marginTop: 18, borderTop: '1px dashed #cbd5e1', paddingTop: 8, color: '#94a3b8' }}>
+                Signature & Cachet Médical :
+              </div>
             </div>
-            <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: '14px 16px', fontSize: '.78rem', color: '#64748b' }}>
-              <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>Structure destinataire</div>
-              <div>MDPH / Orthophoniste</div>
-              <div style={{ marginTop: 20, borderTop: '1px solid #e2e8f0', paddingTop: 10 }}>Reçu le :</div>
+
+            <div style={{ border: '1.5px solid #e2e8f0', borderRadius: 10, padding: '14px 16px', fontSize: '.78rem', color: '#64748b', background: '#fafafa' }}>
+              <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>Commission Destinataire</div>
+              <div style={{ fontWeight: 700, color: '#059669' }}>Commission Médicale Scolaire & CNAM</div>
+              <div>Ministère de l'Éducation · Direction Régionale</div>
+              <div>Dossier d'aménagements spécifiques</div>
+              <div style={{ marginTop: 18, borderTop: '1px dashed #cbd5e1', paddingTop: 8, color: '#94a3b8' }}>
+                Visa de Réception :
+              </div>
             </div>
           </div>
         </div>
@@ -709,10 +853,10 @@ function PageDecision({ child, profil, onExportPDF }) {
 
   return (
     <div className="fade-up" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <PageHeader icon={FileCheck} title="Bilan MDPH & Décision" subtitle="Synthèse clinique et export officiel" color="#059669"
+      <PageHeader icon={FileCheck} title="Bilan Médical & Décision" subtitle="Synthèse clinique et export officiel téléchargeable" color="#059669"
         badge={
-          <button onClick={onExportPDF} className="btn btn-sm" style={{ background: '#059669', color: 'white', boxShadow: '0 2px 8px rgba(5,150,105,.3)' }}>
-            <Printer size={14} /> Export PDF MDPH
+          <button onClick={onExportPDF} className="btn btn-sm" style={{ background: '#059669', color: 'white', boxShadow: '0 2px 8px rgba(5,150,105,.3)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Download size={14} /> Télécharger Bilan PDF
           </button>
         }
       />
@@ -875,8 +1019,8 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
 
           {/* Export PDF button */}
           <div style={{ paddingTop: 14, borderTop: '1px solid var(--border)' }}>
-            <button onClick={() => setShowMdph(true)} className="btn btn-sm" style={{ width: '100%', background: '#059669', color: 'white', boxShadow: '0 2px 8px rgba(5,150,105,.25)', justifyContent: 'center', borderRadius: 'var(--r-md)' }}>
-              <Printer size={13} /> Export PDF MDPH
+            <button onClick={() => setShowMdph(true)} className="btn btn-sm" style={{ width: '100%', background: '#059669', color: 'white', boxShadow: '0 2px 8px rgba(5,150,105,.25)', justifyContent: 'center', borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Download size={14} /> Télécharger Bilan PDF
             </button>
           </div>
         </aside>
