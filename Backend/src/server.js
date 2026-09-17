@@ -5,6 +5,8 @@ import db from './config/db.js';
 import {
   loginUser,
   registerUser,
+  sendOtpEmail,
+  verifyOtpCode,
   getEnfants,
   getEnfantById,
   creerEnfant,
@@ -41,9 +43,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Routes Authentification & Inscription (3 rôles)
+// Routes Authentification, Inscription & 2FA (3 rôles)
 app.post('/api/auth/login', loginUser);
 app.post('/api/auth/register', registerUser);
+app.post('/api/auth/send-otp', sendOtpEmail);
+app.post('/api/auth/verify-otp', verifyOtpCode);
+
 
 
 // Routes Enfants & Observateurs

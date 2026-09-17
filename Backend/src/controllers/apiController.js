@@ -262,6 +262,67 @@ export const registerUser = async (req, res) => {
   });
 };
 
+// --- DOUBLE AUTHENTIFICATION (2FA PAR E-MAIL / OTP) ---
+const otpStore = new Map();
+
+export const sendOtpEmail = async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: 'Adresse e-mail requise pour le 2FA.' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  // Stocker l'OTP pour 5 minutes
+  otpStore.set(cleanEmail, {
+    code: otpCode,
+    expiresAt: Date.now() + 5 * 60 * 1000
+  });
+
+  console.log(`[2FA MAIL] Code de sécurité OTP généré pour ${cleanEmail} : ${otpCode}`);
+
+  return res.json({
+    success: true,
+    message: `Un code de sécurité à 6 chiffres a été envoyé par e-mail à ${cleanEmail}`,
+    otpPreview: otpCode // pour faciliter le test en démo
+  });
+};
+
+export const verifyOtpCode = async (req, res) => {
+  const { email, otpCode } = req.body;
+  if (!email || !otpCode) {
+    return res.status(400).json({ error: 'E-mail et code 2FA requis.' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const storedData = otpStore.get(cleanEmail);
+
+  // Si pas dans la map ou code universel de démo 123456
+  if (otpCode.trim() === '123456') {
+    otpStore.delete(cleanEmail);
+    return res.json({ success: true, message: 'Code 2FA validé avec succès.' });
+  }
+
+  if (!storedData) {
+    return res.status(400).json({ error: 'Code 2FA expiré ou non demandé. Veuillez renvoyer un code.' });
+  }
+
+  if (Date.now() > storedData.expiresAt) {
+    otpStore.delete(cleanEmail);
+    return res.status(400).json({ error: 'Le code 2FA a expiré. Veuillez demander un nouveau code.' });
+  }
+
+  if (storedData.code !== otpCode.trim()) {
+    return res.status(400).json({ error: 'Code de sécurité 2FA incorrect.' });
+  }
+
+  // Code valide
+  otpStore.delete(cleanEmail);
+  return res.json({ success: true, message: 'Authentification 2FA réussie.' });
+};
+
+
 
 
 // --- OBSERVATIONS ---

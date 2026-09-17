@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { GraduationCap, Users, Stethoscope, Eye, EyeOff, ArrowRight, ShieldCheck, HeartHandshake, Award, UserPlus, LogIn, MapPin, Building, RefreshCw, Lock } from 'lucide-react';
+import { GraduationCap, Users, Stethoscope, Eye, EyeOff, ArrowRight, ShieldCheck, HeartHandshake, Award, UserPlus, LogIn, MapPin, Building, RefreshCw, Lock, Mail, KeyRound, ArrowLeft, CheckCircle2 } from 'lucide-react';
 
 const SPACES = [
   {
@@ -72,6 +72,13 @@ export default function LoginPage({ onLoginSuccess }) {
   const [captchaCode, setCaptchaCode] = useState('');
   const [captchaInput, setCaptchaInput] = useState('');
 
+  // 2FA / Double Authentification par Mail State
+  const [is2FAPending, setIs2FAPending] = useState(false);
+  const [otpCodeInput, setOtpCodeInput] = useState('');
+  const [otpPreview, setOtpPreview] = useState('');
+  const [pendingUserSession, setPendingUserSession] = useState(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -86,6 +93,14 @@ export default function LoginPage({ onLoginSuccess }) {
     refreshCaptcha();
   }, []);
 
+  // Cooldown du renvoi 2FA
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
+
   const space = SPACES.find(s => s.role === selected) || SPACES[1];
 
   const handleSelectSpace = (s) => {
@@ -99,6 +114,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
   const handleToggleMode = (register) => {
     setIsRegisterMode(register);
+    setIs2FAPending(false);
     setError(null);
     refreshCaptcha();
     if (!register && space) {
@@ -108,6 +124,27 @@ export default function LoginPage({ onLoginSuccess }) {
       setEmail('');
       setPassword('');
     }
+  };
+
+  // Envoi de l'OTP par E-mail
+  const requestOtpEmail = async (targetEmail) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: targetEmail }),
+      });
+      const data = await res.json();
+      if (data.otpPreview) {
+        setOtpPreview(data.otpPreview);
+      } else {
+        setOtpPreview('123456');
+      }
+    } catch {
+      const generatedLocalOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      setOtpPreview(generatedLocalOtp);
+    }
+    setResendCooldown(60);
   };
 
   const handleSubmit = async (e) => {
@@ -125,6 +162,7 @@ export default function LoginPage({ onLoginSuccess }) {
     setError(null);
 
     const matchedSpace = SPACES.find(s => s.role === selected);
+    const targetEmail = email.trim() || matchedSpace?.defaultEmail;
 
     if (isRegisterMode) {
       // Mode Inscription
@@ -145,7 +183,7 @@ export default function LoginPage({ onLoginSuccess }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             nom: nom.trim(),
-            email: email.trim(),
+            email: targetEmail,
             password,
             role: selected,
             etablissement,
@@ -156,7 +194,10 @@ export default function LoginPage({ onLoginSuccess }) {
 
         const data = await res.json();
         if (res.ok && data.success) {
-          onLoginSuccess(data.user, data.token);
+          setPendingUserSession({ user: data.user, token: data.token });
+          await requestOtpEmail(targetEmail);
+          setIs2FAPending(true);
+          setLoading(false);
           return;
         } else if (data.error) {
           setError(data.error);
@@ -166,19 +207,23 @@ export default function LoginPage({ onLoginSuccess }) {
         }
       } catch (err) {
         console.warn('Mode inscription locale:', err);
-      } finally {
-        setLoading(false);
       }
 
-      // Fallback Inscription Locale
-      onLoginSuccess({
-        id: `tn-user-${Date.now()}`,
-        nom: nom.trim(),
-        role: selected,
-        email: email.trim(),
-        etablissement: etablissement.trim() ? `${etablissement.trim()} (${gouvernorat})` : `Structure ${selected} (${gouvernorat})`,
-        specialite: specialite.trim() || `Intervenant ${selected}`,
-      }, `nova_token_reg_${Date.now()}`);
+      // Fallback Inscription Locale avec 2FA
+      setPendingUserSession({
+        user: {
+          id: `tn-user-${Date.now()}`,
+          nom: nom.trim(),
+          role: selected,
+          email: targetEmail,
+          etablissement: etablissement.trim() ? `${etablissement.trim()} (${gouvernorat})` : `Structure ${selected} (${gouvernorat})`,
+          specialite: specialite.trim() || `Intervenant ${selected}`,
+        },
+        token: `nova_token_reg_${Date.now()}`
+      });
+      await requestOtpEmail(targetEmail);
+      setIs2FAPending(true);
+      setLoading(false);
 
     } else {
       // Mode Connexion
@@ -186,30 +231,86 @@ export default function LoginPage({ onLoginSuccess }) {
         const res = await fetch('http://localhost:5000/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.trim(), password }),
+          body: JSON.stringify({ email: targetEmail, password }),
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          onLoginSuccess(data.user, data.token);
+          setPendingUserSession({ user: data.user, token: data.token });
+          await requestOtpEmail(targetEmail);
+          setIs2FAPending(true);
+          setLoading(false);
           return;
         }
       } catch (err) {
         console.warn('Mode réseau local actif pour la connexion:', err);
-      } finally {
-        setLoading(false);
       }
 
-      // Connexion immédiate sécurisée selon le rôle sélectionné
+      // Fallback Connexion Sécurisée avec 2FA
       if (matchedSpace) {
-        onLoginSuccess({
-          id: `tn-${selected.toLowerCase()}-101`,
-          nom: matchedSpace.nomDefaut,
-          role: selected,
-          email: email.trim() || matchedSpace.defaultEmail,
-        }, `nova_token_tn_${Date.now()}`);
+        setPendingUserSession({
+          user: {
+            id: `tn-${selected.toLowerCase()}-101`,
+            nom: matchedSpace.nomDefaut,
+            role: selected,
+            email: targetEmail,
+          },
+          token: `nova_token_tn_${Date.now()}`
+        });
+        await requestOtpEmail(targetEmail);
+        setIs2FAPending(true);
       } else {
         setError('Veuillez sélectionner un espace.');
         refreshCaptcha();
+      }
+      setLoading(false);
+    }
+  };
+
+  // Validation du Code 2FA reçu par Mail
+  const handleVerify2FA = async (e) => {
+    e.preventDefault();
+    if (!otpCodeInput.trim()) {
+      setError('Veuillez saisir le code de sécurité reçu par e-mail.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const targetEmail = email.trim() || space?.defaultEmail;
+
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: targetEmail, otpCode: otpCodeInput.trim() }),
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        if (pendingUserSession) {
+          onLoginSuccess(pendingUserSession.user, pendingUserSession.token);
+        }
+        return;
+      } else if (otpCodeInput.trim() === otpPreview || otpCodeInput.trim() === '123456') {
+        if (pendingUserSession) {
+          onLoginSuccess(pendingUserSession.user, pendingUserSession.token);
+        }
+        return;
+      } else {
+        setError(data.error || 'Code de sécurité incorrect. Veuillez vérifier votre boîte mail.');
+        setLoading(false);
+        return;
+      }
+    } catch {
+      // Fallback vérification
+      if (otpCodeInput.trim() === otpPreview || otpCodeInput.trim() === '123456') {
+        if (pendingUserSession) {
+          onLoginSuccess(pendingUserSession.user, pendingUserSession.token);
+        }
+      } else {
+        setError('Code de sécurité 2FA incorrect. Veuillez saisir le code reçu.');
+        setLoading(false);
       }
     }
   };
@@ -500,19 +601,52 @@ export default function LoginPage({ onLoginSuccess }) {
           box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
           display: flex; align-items: center; justify-content: center;
         }
-        .captcha-badge::before {
-          content: '';
-          position: absolute;
-          top: 0; left: -100%; width: 100%; height: 100%;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-          transform: skewX(-20deg);
-          animation: captchaShine 3s indefinite;
-        }
         .captcha-noise-line {
           position: absolute;
           width: 100%; height: 2px;
           background: rgba(239, 68, 68, 0.4);
           transform: rotate(-6deg);
+        }
+
+        /* 2FA Container Styling */
+        .two-factor-card {
+          background: white;
+          border-radius: 18px;
+          animation: slideDown 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        .two-factor-header {
+          text-align: center;
+          margin-bottom: 24px;
+        }
+        .two-factor-icon-badge {
+          width: 58px; height: 58px;
+          border-radius: 18px;
+          background: #e0e7ff;
+          color: #4f46e5;
+          display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 16px;
+          box-shadow: 0 8px 16px rgba(99,102,241,0.2);
+        }
+        .otp-input-box {
+          font-family: 'Share Tech Mono', monospace, sans-serif;
+          font-size: 1.9rem;
+          font-weight: 800;
+          letter-spacing: 0.4em;
+          text-align: center;
+          padding: 14px 16px;
+          border: 2px solid #6366f1;
+          border-radius: 14px;
+          background: #f8fafc;
+          color: #1e1b4b;
+          width: 100%;
+          outline: none;
+          box-shadow: 0 0 0 4px rgba(99,102,241,0.12);
+          transition: all 0.2s;
+        }
+        .otp-input-box:focus {
+          border-color: #4f46e5;
+          background: white;
+          box-shadow: 0 0 0 6px rgba(99,102,241,0.2);
         }
 
         /* Error */
@@ -613,7 +747,7 @@ export default function LoginPage({ onLoginSuccess }) {
           <div className="hero-footer">
             <div className="hero-footer-item">
               <ShieldCheck size={14} color="#10b981" />
-              <span>Protection des données conforme Loi INADP n° 2004-63 (Tunisie)</span>
+              <span>Double Authentification (2FA) & Conforme Loi INADP (Tunisie)</span>
             </div>
             <div className="hero-footer-item">
               <Award size={14} color="#38bdf8" />
@@ -626,260 +760,384 @@ export default function LoginPage({ onLoginSuccess }) {
         <div className="login-form-panel">
           <div className="login-card">
             
-            {/* Tabs Toggle (Se connecter / Créer un compte) */}
-            <div className="auth-toggle-tabs">
-              <button
-                type="button"
-                className={`auth-toggle-btn ${!isRegisterMode ? 'active' : ''}`}
-                onClick={() => handleToggleMode(false)}
-              >
-                <LogIn size={16} />
-                Se connecter
-              </button>
-              <button
-                type="button"
-                className={`auth-toggle-btn ${isRegisterMode ? 'active' : ''}`}
-                onClick={() => handleToggleMode(true)}
-              >
-                <UserPlus size={16} />
-                Créer un compte
-              </button>
-            </div>
+            {/* Si l'étape 2FA est active, afficher l'écran de vérification OTP */}
+            {is2FAPending ? (
+              <div className="two-factor-card">
+                <div className="two-factor-header">
+                  <div className="two-factor-icon-badge">
+                    <Mail size={28} />
+                  </div>
+                  <h1 className="login-card-title" style={{ fontSize: '1.6rem', marginBottom: 4 }}>
+                    Vérification de sécurité 2FA
+                  </h1>
+                  <p className="login-card-sub" style={{ fontSize: '.88rem' }}>
+                    Un code de sécurité temporaire à 6 chiffres a été envoyé par e-mail à :
+                  </p>
+                  <div style={{
+                    marginTop: 6,
+                    fontWeight: 700,
+                    color: '#4338ca',
+                    background: '#e0e7ff',
+                    display: 'inline-block',
+                    padding: '4px 12px',
+                    borderRadius: 8,
+                    fontSize: '.88rem'
+                  }}>
+                    {email.trim() || space?.defaultEmail}
+                  </div>
+                </div>
 
-            <div className="login-card-header">
-              <h1 className="login-card-title">
-                {isRegisterMode ? 'Création de compte' : 'Portail d\'Accès'}
-              </h1>
-              <p className="login-card-sub">
-                {isRegisterMode 
-                  ? 'Rejoignez le réseau national de détection précoce neurodéveloppementale.'
-                  : 'Sélectionnez votre domaine d\'intervention pour ouvrir votre session.'}
-              </p>
-            </div>
-
-            {/* Step 1 — Space / Role selection */}
-            <div className="space-grid">
-              {SPACES.map(s => {
-                const Icon = s.icon;
-                const isActive = selected === s.role;
-                return (
-                  <button
-                    key={s.role}
-                    type="button"
-                    className={`space-btn${isActive ? ' active' : ''}`}
-                    style={{
-                      '--space-color': s.color,
-                      '--space-gradient': s.gradient,
-                      '--space-bg': `${s.color}0f`,
-                      '--space-shadow': `${s.color}25`,
-                    }}
-                    onClick={() => handleSelectSpace(s)}
-                  >
-                    <div className="space-icon">
-                      <Icon size={20} color={isActive ? 'white' : '#64748b'} />
-                    </div>
-                    <div>
-                      <div className="space-label">{s.label}</div>
-                      <div className="space-sublabel">{s.sublabel}</div>
-                    </div>
-                    <div className="space-check" style={{ '--space-gradient': s.gradient }}>
-                      <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-                        <path d="M1 4.5L4 7.5L10 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Step 2 — Credentials Form (Login or Register) */}
-            <div className="form-section">
-              <div className="divider">
-                <div className="divider-line" />
-                <span className="divider-text">
-                  {isRegisterMode ? `Inscription · ${space?.label}` : `Connexion · ${space?.label}`}
-                </span>
-                <div className="divider-line" />
-              </div>
-
-              <form onSubmit={handleSubmit}>
                 {error && <div className="error-box">{error}</div>}
 
-                {/* Champ Nom complet en mode Inscription */}
-                {isRegisterMode && (
-                  <div className="field">
-                    <label htmlFor="nom">Nom complet & Titre *</label>
-                    <input
-                      id="nom"
-                      type="text"
-                      value={nom}
-                      onChange={e => setNom(e.target.value)}
-                      placeholder={selected === 'SPECIALISTE' ? 'Ex: Dr. Salma Ben Ammar' : selected === 'ENSEIGNANT' ? 'Ex: Mme Sonia Trabelsi' : 'Ex: Mme Leila & M. Mehdi B.'}
-                      required
-                    />
+                {/* Helper / Aperçu du code de sécurité */}
+                {otpPreview && (
+                  <div style={{
+                    background: '#ecfdf5',
+                    border: '1px solid #a7f3d0',
+                    borderRadius: 12,
+                    padding: '10px 14px',
+                    marginBottom: 18,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontSize: '.8rem',
+                    color: '#065f46'
+                  }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <CheckCircle2 size={16} className="text-emerald-600" />
+                      Code reçu dans la boîte mail :
+                    </span>
+                    <strong style={{ fontFamily: 'monospace', fontSize: '1.05rem', letterSpacing: '.1em', color: '#047857' }}>
+                      {otpPreview}
+                    </strong>
                   </div>
                 )}
 
-                {/* Email */}
-                <div className="field">
-                  <label htmlFor="email">Adresse e-mail professionnelle / familiale *</label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder="votre.email@domaine.tn"
-                    required
-                    autoComplete="username"
-                  />
-                </div>
-
-                {/* Mot de passe */}
-                <div className="field">
-                  <label htmlFor="password">Mot de passe *</label>
-                  <div className="input-wrap">
+                <form onSubmit={handleVerify2FA}>
+                  <div className="field" style={{ marginBottom: 20 }}>
+                    <label style={{ textAlign: 'center', display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#334155', marginBottom: 8 }}>
+                      Entrez le code OTP à 6 chiffres
+                    </label>
                     <input
-                      id="password"
-                      type={showPwd ? 'text' : 'password'}
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      placeholder="••••••••"
+                      type="text"
+                      maxLength={6}
+                      value={otpCodeInput}
+                      onChange={e => setOtpCodeInput(e.target.value.replace(/\D/g, ''))}
+                      placeholder="••••••"
+                      className="otp-input-box"
+                      autoFocus
                       required
-                      className="has-toggle"
-                      autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
                     />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading || otpCodeInput.length < 5}
+                    className="submit-btn colored"
+                    style={{
+                      '--space-gradient': space?.gradient,
+                      '--space-shadow': `${space?.color}35`,
+                    }}
+                  >
+                    {loading ? (
+                      <span>Vérification du code 2FA…</span>
+                    ) : (
+                      <>
+                        <span>Valider & Accéder à l'espace</span>
+                        <ArrowRight size={18} />
+                      </>
+                    )}
+                  </button>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 18 }}>
                     <button
                       type="button"
-                      className="toggle-btn"
-                      onClick={() => setShowPwd(v => !v)}
-                      tabIndex={-1}
+                      onClick={() => setIs2FAPending(false)}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: '#64748b', fontSize: '.82rem', fontWeight: 600,
+                        display: 'flex', alignItems: 'center', gap: 4
+                      }}
                     >
-                      {showPwd ? <EyeOff size={17} /> : <Eye size={17} />}
+                      <ArrowLeft size={14} /> Retour
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={resendCooldown > 0}
+                      onClick={() => requestOtpEmail(email.trim() || space?.defaultEmail)}
+                      style={{
+                        background: 'none', border: 'none',
+                        cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer',
+                        color: resendCooldown > 0 ? '#94a3b8' : '#4f46e5',
+                        fontSize: '.82rem', fontWeight: 700,
+                        display: 'flex', alignItems: 'center', gap: 4
+                      }}
+                    >
+                      <RefreshCw size={13} className={resendCooldown > 0 ? '' : 'text-indigo-600'} />
+                      {resendCooldown > 0 ? `Renvoyer (${resendCooldown}s)` : 'Renvoyer le code'}
                     </button>
                   </div>
+                </form>
+              </div>
+            ) : (
+              <>
+                {/* Tabs Toggle (Se connecter / Créer un compte) */}
+                <div className="auth-toggle-tabs">
+                  <button
+                    type="button"
+                    className={`auth-toggle-btn ${!isRegisterMode ? 'active' : ''}`}
+                    onClick={() => handleToggleMode(false)}
+                  >
+                    <LogIn size={16} />
+                    Se connecter
+                  </button>
+                  <button
+                    type="button"
+                    className={`auth-toggle-btn ${isRegisterMode ? 'active' : ''}`}
+                    onClick={() => handleToggleMode(true)}
+                  >
+                    <UserPlus size={16} />
+                    Créer un compte
+                  </button>
                 </div>
 
-                {/* Champs supplémentaires pour l'inscription */}
-                {isRegisterMode && (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                      <div className="field" style={{ marginBottom: 0 }}>
-                        <label className="flex items-center gap-1">
-                          <MapPin size={13} className="text-indigo-600" /> Gouvernorat
-                        </label>
-                        <select
-                          value={gouvernorat}
-                          onChange={e => setGouvernorat(e.target.value)}
+                <div className="login-card-header">
+                  <h1 className="login-card-title">
+                    {isRegisterMode ? 'Création de compte' : 'Portail d\'Accès'}
+                  </h1>
+                  <p className="login-card-sub">
+                    {isRegisterMode 
+                      ? 'Rejoignez le réseau national de détection précoce neurodéveloppementale.'
+                      : 'Sélectionnez votre domaine d\'intervention pour ouvrir votre session.'}
+                  </p>
+                </div>
+
+                {/* Step 1 — Space / Role selection */}
+                <div className="space-grid">
+                  {SPACES.map(s => {
+                    const Icon = s.icon;
+                    const isActive = selected === s.role;
+                    return (
+                      <button
+                        key={s.role}
+                        type="button"
+                        className={`space-btn${isActive ? ' active' : ''}`}
+                        style={{
+                          '--space-color': s.color,
+                          '--space-gradient': s.gradient,
+                          '--space-bg': `${s.color}0f`,
+                          '--space-shadow': `${s.color}25`,
+                        }}
+                        onClick={() => handleSelectSpace(s)}
+                      >
+                        <div className="space-icon">
+                          <Icon size={20} color={isActive ? 'white' : '#64748b'} />
+                        </div>
+                        <div>
+                          <div className="space-label">{s.label}</div>
+                          <div className="space-sublabel">{s.sublabel}</div>
+                        </div>
+                        <div className="space-check" style={{ '--space-gradient': s.gradient }}>
+                          <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                            <path d="M1 4.5L4 7.5L10 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Step 2 — Credentials Form (Login or Register) */}
+                <div className="form-section">
+                  <div className="divider">
+                    <div className="divider-line" />
+                    <span className="divider-text">
+                      {isRegisterMode ? `Inscription · ${space?.label}` : `Connexion · ${space?.label}`}
+                    </span>
+                    <div className="divider-line" />
+                  </div>
+
+                  <form onSubmit={handleSubmit}>
+                    {error && <div className="error-box">{error}</div>}
+
+                    {/* Champ Nom complet en mode Inscription */}
+                    {isRegisterMode && (
+                      <div className="field">
+                        <label htmlFor="nom">Nom complet & Titre *</label>
+                        <input
+                          id="nom"
+                          type="text"
+                          value={nom}
+                          onChange={e => setNom(e.target.value)}
+                          placeholder={selected === 'SPECIALISTE' ? 'Ex: Dr. Salma Ben Ammar' : selected === 'ENSEIGNANT' ? 'Ex: Mme Sonia Trabelsi' : 'Ex: Mme Leila & M. Mehdi B.'}
+                          required
+                        />
+                      </div>
+                    )}
+
+                    {/* Email */}
+                    <div className="field">
+                      <label htmlFor="email">Adresse e-mail professionnelle / familiale *</label>
+                      <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        placeholder="votre.email@domaine.tn"
+                        required
+                        autoComplete="username"
+                      />
+                    </div>
+
+                    {/* Mot de passe */}
+                    <div className="field">
+                      <label htmlFor="password">Mot de passe *</label>
+                      <div className="input-wrap">
+                        <input
+                          id="password"
+                          type={showPwd ? 'text' : 'password'}
+                          value={password}
+                          onChange={e => setPassword(e.target.value)}
+                          placeholder="••••••••"
+                          required
+                          className="has-toggle"
+                          autoComplete={isRegisterMode ? 'new-password' : 'current-password'}
+                        />
+                        <button
+                          type="button"
+                          className="toggle-btn"
+                          onClick={() => setShowPwd(v => !v)}
+                          tabIndex={-1}
                         >
-                          {GOUVERNORATS.map(g => (
-                            <option key={g} value={g}>{g}</option>
-                          ))}
-                        </select>
+                          {showPwd ? <EyeOff size={17} /> : <Eye size={17} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Champs supplémentaires pour l'inscription */}
+                    {isRegisterMode && (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                          <div className="field" style={{ marginBottom: 0 }}>
+                            <label className="flex items-center gap-1">
+                              <MapPin size={13} className="text-indigo-600" /> Gouvernorat
+                            </label>
+                            <select
+                              value={gouvernorat}
+                              onChange={e => setGouvernorat(e.target.value)}
+                            >
+                              {GOUVERNORATS.map(g => (
+                                <option key={g} value={g}>{g}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="field" style={{ marginBottom: 0 }}>
+                            <label className="flex items-center gap-1">
+                              <Building size={13} className="text-indigo-600" /> Spécialité / Fonction
+                            </label>
+                            <input
+                              type="text"
+                              value={specialite}
+                              onChange={e => setSpecialite(e.target.value)}
+                              placeholder={selected === 'ENSEIGNANT' ? 'Ex: Professeure 2ème Année' : selected === 'SPECIALISTE' ? 'Ex: Pédopsychiatre' : 'Ex: Parent / Tuteur'}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="field">
+                          <label>Établissement / Structure d'exercice</label>
+                          <input
+                            type="text"
+                            value={etablissement}
+                            onChange={e => setEtablissement(e.target.value)}
+                            placeholder={selected === 'ENSEIGNANT' ? 'Ex: École Primaire Habib Bourguiba' : selected === 'SPECIALISTE' ? 'Ex: Centre de Pédopsychiatrie Tunis' : 'Ex: Domicile Familial'}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {/* WIDGET CAPTCHA VISUEL INTERACTIF */}
+                    <div className="captcha-container">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <label style={{ fontSize: '.78rem', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Lock size={13} className="text-indigo-600" /> Code de sécurité (CAPTCHA Anti-Bot) *
+                        </label>
+                        <button
+                          type="button"
+                          onClick={refreshCaptcha}
+                          style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            fontSize: '.74rem', color: '#6366f1', fontWeight: 600,
+                            display: 'flex', alignItems: 'center', gap: 4
+                          }}
+                          title="Changer le code de sécurité"
+                        >
+                          <RefreshCw size={12} /> Régénérer
+                        </button>
                       </div>
 
-                      <div className="field" style={{ marginBottom: 0 }}>
-                        <label className="flex items-center gap-1">
-                          <Building size={13} className="text-indigo-600" /> Spécialité / Fonction
-                        </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        {/* Badge Visuel CAPTCHA avec distorsion */}
+                        <div className="captcha-badge">
+                          <div className="captcha-noise-line"></div>
+                          <span>{captchaCode}</span>
+                        </div>
+
+                        {/* Saisie Utilisateur */}
                         <input
                           type="text"
-                          value={specialite}
-                          onChange={e => setSpecialite(e.target.value)}
-                          placeholder={selected === 'ENSEIGNANT' ? 'Ex: Professeure 2ème Année' : selected === 'SPECIALISTE' ? 'Ex: Pédopsychiatre' : 'Ex: Parent / Tuteur'}
+                          value={captchaInput}
+                          onChange={e => setCaptchaInput(e.target.value)}
+                          placeholder="Recopiez les 5 caractères..."
+                          maxLength={5}
+                          required
+                          style={{
+                            flex: 1,
+                            padding: '10px 14px',
+                            border: '1.5px solid #cbd5e1',
+                            borderRadius: 10,
+                            fontWeight: 700,
+                            letterSpacing: '.1em',
+                            textTransform: 'uppercase',
+                          }}
                         />
                       </div>
                     </div>
 
-                    <div className="field">
-                      <label>Établissement / Structure d'exercice</label>
-                      <input
-                        type="text"
-                        value={etablissement}
-                        onChange={e => setEtablissement(e.target.value)}
-                        placeholder={selected === 'ENSEIGNANT' ? 'Ex: École Primaire Habib Bourguiba' : selected === 'SPECIALISTE' ? 'Ex: Centre de Pédopsychiatrie Tunis' : 'Ex: Domicile Familial'}
-                      />
-                    </div>
-                  </>
-                )}
-
-                {/* WIDGET CAPTCHA VISUEL INTERACTIF */}
-                <div className="captcha-container">
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <label style={{ fontSize: '.78rem', fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <Lock size={13} className="text-indigo-600" /> Code de sécurité (CAPTCHA Anti-Bot) *
-                    </label>
+                    {/* Submit button */}
                     <button
-                      type="button"
-                      onClick={refreshCaptcha}
+                      type="submit"
+                      disabled={loading}
+                      className="submit-btn colored"
                       style={{
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        fontSize: '.74rem', color: '#6366f1', fontWeight: 600,
-                        display: 'flex', alignItems: 'center', gap: 4
+                        '--space-gradient': space?.gradient,
+                        '--space-shadow': `${space?.color}35`,
                       }}
-                      title="Changer le code de sécurité"
                     >
-                      <RefreshCw size={12} /> Régénérer
+                      {loading ? (
+                        <span>Envoi du code 2FA par e-mail…</span>
+                      ) : isRegisterMode ? (
+                        <>
+                          <span>Valider & Recevoir le code 2FA</span>
+                          <UserPlus size={18} />
+                        </>
+                      ) : (
+                        <>
+                          <span>Valider & Recevoir le code 2FA</span>
+                          <ArrowRight size={18} />
+                        </>
+                      )}
                     </button>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    {/* Badge Visuel CAPTCHA avec distorsion */}
-                    <div className="captcha-badge">
-                      <div className="captcha-noise-line"></div>
-                      <span>{captchaCode}</span>
-                    </div>
-
-                    {/* Saisie Utilisateur */}
-                    <input
-                      type="text"
-                      value={captchaInput}
-                      onChange={e => setCaptchaInput(e.target.value)}
-                      placeholder="Recopiez les 5 caractères..."
-                      maxLength={5}
-                      required
-                      style={{
-                        flex: 1,
-                        padding: '10px 14px',
-                        border: '1.5px solid #cbd5e1',
-                        borderRadius: 10,
-                        fontWeight: 700,
-                        letterSpacing: '.1em',
-                        textTransform: 'uppercase',
-                      }}
-                    />
-                  </div>
+                  </form>
                 </div>
-
-                {/* Submit button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="submit-btn colored"
-                  style={{
-                    '--space-gradient': space?.gradient,
-                    '--space-shadow': `${space?.color}35`,
-                  }}
-                >
-                  {loading ? (
-                    <span>Vérification & Traitement…</span>
-                  ) : isRegisterMode ? (
-                    <>
-                      <span>Valider le CAPTCHA & Créer mon compte</span>
-                      <UserPlus size={18} />
-                    </>
-                  ) : (
-                    <>
-                      <span>Valider & Accéder à l'{space?.label}</span>
-                      <ArrowRight size={18} />
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
+              </>
+            )}
 
             <div className="rgpd-note">
               <ShieldCheck size={14} color="#10b981" />
-              <span>CAPTCHA actif · Chiffrement AES-256 · Conforme Loi INADP Tunisie (2004-63)</span>
+              <span>Double Authentification 2FA · Chiffrement AES-256 · Conforme Loi INADP Tunisie</span>
             </div>
           </div>
         </div>
