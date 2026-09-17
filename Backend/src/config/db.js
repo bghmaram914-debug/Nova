@@ -13,49 +13,52 @@ export const mockDatabase = {
   enfants: [
     {
       id: 'e1111111-1111-1111-1111-111111111111',
-      prenom: 'Léo',
-      nom_anonyme: 'Léo M.',
-      code_identifiant: 'NOVA-2026-084',
+      prenom: 'Youssef',
+      nom_anonyme: 'Youssef B.',
+      code_identifiant: 'TN-NOVA-2026-084',
       age: 7,
-      niveau_scolaire: 'CE1',
-      etablissement: 'École Primaire Jules Ferry',
+      niveau_scolaire: '2ème Année Primaire',
+      etablissement: 'École Primaire Habib Bourguiba - Tunis',
       created_at: new Date().toISOString()
     },
     {
       id: 'e2222222-2222-2222-2222-222222222222',
-      prenom: 'Maya',
-      nom_anonyme: 'Maya K.',
-      code_identifiant: 'NOVA-2026-112',
+      prenom: 'Sarra',
+      nom_anonyme: 'Sarra K.',
+      code_identifiant: 'TN-NOVA-2026-112',
       age: 6,
-      niveau_scolaire: 'CP',
-      etablissement: 'École Maternelle & Élémentaire Jean Jaurès',
+      niveau_scolaire: '1ère Année Primaire',
+      etablissement: 'École Primaire Ibn Khaldoun - Sousse',
       created_at: new Date().toISOString()
     }
   ],
   observateurs: [
     {
       id: 'a1111111-1111-1111-1111-111111111111',
-      nom: 'Mme Dupuis',
+      nom: 'Mme Sonia Trabelsi',
       role: 'ENSEIGNANT',
-      email: 'c.dupuis@ecole-julesferry.fr',
-      etablissement: 'École Primaire Jules Ferry',
-      specialite: 'Professeure des écoles CE1'
+      email: 's.trabelsi@education.tn',
+      mot_de_passe: 'enseignant123',
+      etablissement: 'École Primaire Habib Bourguiba - Tunis',
+      specialite: 'Enseignante Référente 2ème Année Primaire'
     },
     {
       id: 'a2222222-2222-2222-2222-222222222222',
-      nom: 'Sophie M.',
-      role: 'PARENT',
-      email: 'sophie.m@parent-nova.fr',
-      etablissement: 'Domicile familial',
-      specialite: 'Mère de Léo'
+      nom: 'Mme Leila & Famille B.',
+      role: 'FAMILLE',
+      email: 'famille.b@nova.tn',
+      mot_de_passe: 'famille123',
+      etablissement: 'Domicile familial (Tunis)',
+      specialite: 'Tuteurs légaux & Entourage familial'
     },
     {
       id: 'a3333333-3333-3333-3333-333333333333',
-      nom: 'Dr. Claire Laurent',
+      nom: 'Dr. Anis Ben Salah',
       role: 'SPECIALISTE',
-      email: 'c.laurent@reseau-sante.fr',
-      etablissement: 'Centre de Diagnostic Pédiatrique',
-      specialite: 'Neuropsychologue & Médecin coordonnateur'
+      email: 'dr.bensalah@sante.tn',
+      mot_de_passe: 'specialiste123',
+      etablissement: 'Centre de Pédopsychiatrie & Neuropsychologie (Tunis)',
+      specialite: 'Pédopsychiatre & Spécialiste des TND'
     }
   ],
   consentements: [
@@ -65,8 +68,8 @@ export const mockDatabase = {
       parent_id: 'a2222222-2222-2222-2222-222222222222',
       statut: 'SIGNE',
       date_signature: new Date().toISOString(),
-      signature_electronique_hash: 'sha256_e8293bc842918df92a01bf78e',
-      remarques_parentales: 'Accord donné pour observation croisée et mini-jeux ludiques.'
+      signature_electronique_hash: 'sha256_tn_e8293bc842918df92a01bf78e',
+      remarques_parentales: 'Accord signé selon la loi n° 2004-63 (INADP Tunisie) pour suivi collaboratif.'
     }
   ],
   observations: [
@@ -74,7 +77,7 @@ export const mockDatabase = {
       id: 'o1111111-1111-1111-1111-111111111111',
       enfant_id: 'e1111111-1111-1111-1111-111111111111',
       observateur_id: 'a1111111-1111-1111-1111-111111111111',
-      observateur_nom: 'Mme Dupuis (Enseignante)',
+      observateur_nom: 'Mme Sonia Trabelsi (Enseignante)',
       domaine: 'ATTENTION',
       contexte: 'ECOLE',
       frequence_difficulte: 4,
@@ -86,8 +89,21 @@ export const mockDatabase = {
     {
       id: 'o2222222-2222-2222-2222-222222222222',
       enfant_id: 'e1111111-1111-1111-1111-111111111111',
+      observateur_id: 'a1111111-1111-1111-1111-111111111111',
+      observateur_nom: 'Mme Sonia Trabelsi (Enseignante)',
+      domaine: 'MOTRICITE',
+      contexte: 'ECOLE',
+      frequence_difficulte: 3,
+      impact_quotidien: 2,
+      reponse_detaillee: 'Tenue du crayon un peu crispée, lenteur pour copier les devoirs au tableau en écriture cursive arabe et française.',
+      exemples_concrets: 'Prend 5 minutes de plus que ses camarades pour copier la date au tableau.',
+      date_observation: new Date(Date.now() - 86400000 * 2).toISOString()
+    },
+    {
+      id: 'o3333333-3333-3333-3333-333333333333',
+      enfant_id: 'e1111111-1111-1111-1111-111111111111',
       observateur_id: 'a2222222-2222-2222-2222-222222222222',
-      observateur_nom: 'Sophie M. (Parent)',
+      observateur_nom: 'Mme Leila & Famille B. (Maison)',
       domaine: 'ATTENTION',
       contexte: 'MAISON',
       frequence_difficulte: 4,
@@ -97,29 +113,29 @@ export const mockDatabase = {
       date_observation: new Date(Date.now() - 86400000 * 2).toISOString()
     },
     {
-      id: 'o3333333-3333-3333-3333-333333333333',
-      enfant_id: 'e1111111-1111-1111-1111-111111111111',
-      observateur_id: 'a1111111-1111-1111-1111-111111111111',
-      observateur_nom: 'Mme Dupuis (Enseignante)',
-      domaine: 'MOTRICITE',
-      contexte: 'ECOLE',
-      frequence_difficulte: 3,
-      impact_quotidien: 2,
-      reponse_detaillee: 'Tenue du stylo crispée, fatigue musculaire lors des longues sessions d écriture.',
-      exemples_concrets: 'Secoue souvent la main droite après quelques lignes copiées.',
-      date_observation: new Date(Date.now() - 86400000 * 1).toISOString()
-    },
-    {
       id: 'o4444444-4444-4444-4444-444444444444',
       enfant_id: 'e1111111-1111-1111-1111-111111111111',
       observateur_id: 'a2222222-2222-2222-2222-222222222222',
-      observateur_nom: 'Sophie M. (Parent)',
+      observateur_nom: 'Mme Leila & Famille B. (Entourage)',
+      domaine: 'COMPORTEMENT',
+      contexte: 'FAMILLE',
+      frequence_difficulte: 3,
+      impact_quotidien: 2,
+      reponse_detaillee: 'Très affectueux et enthousiaste, mais peut réagir vivement en cas de frustration imprévue avec ses cousins.',
+      exemples_concrets: 'A besoin d un temps de retour au calme à l écart pour réguler son excitation.',
+      date_observation: new Date(Date.now() - 86400000 * 1).toISOString()
+    },
+    {
+      id: 'o5555555-5555-5555-5555-555555555555',
+      enfant_id: 'e1111111-1111-1111-1111-111111111111',
+      observateur_id: 'a2222222-2222-2222-2222-222222222222',
+      observateur_nom: 'Mme Leila & Famille B. (Maison)',
       domaine: 'LANGAGE',
       contexte: 'MAISON',
       frequence_difficulte: 1,
       impact_quotidien: 1,
-      reponse_detaillee: 'Excellente communication orale, vocabulaire riche, très curieux.',
-      exemples_concrets: 'Pose beaucoup de questions, comprend très bien le sens des histoires.',
+      reponse_detaillee: 'Excellente communication orale en arabe et français, vocabulaire riche, très curieux.',
+      exemples_concrets: 'Pose beaucoup de questions, comprend très bien le sens des histoires récitees.',
       date_observation: new Date(Date.now() - 86400000 * 1).toISOString()
     }
   ],
@@ -158,7 +174,7 @@ if (process.env.DATABASE_URL) {
 
     pool.query('SELECT NOW()', (err, res) => {
       if (err) {
-        console.warn('⚠️ Attention: Impossible de se connecter à PostgreSQL, mode Fallback Mémoire actif :', err.message);
+        console.warn('⚠️ Attention: PostgreSQL non joint, fonctionnement en mode mémoire local (Tunisie) :', err.message);
         isConnectedToPostgres = false;
       } else {
         console.log('✅ Connecté avec succès à PostgreSQL:', res.rows[0].now);
@@ -166,10 +182,10 @@ if (process.env.DATABASE_URL) {
       }
     });
   } catch (error) {
-    console.warn('⚠️ Erreur initialisation pool PostgreSQL, fallback mémoire actif:', error.message);
+    console.warn('⚠️ Erreur initialisation pool PostgreSQL, mode mémoire local actif:', error.message);
   }
 } else {
-  console.log('ℹ️ DATABASE_URL non définie. Démarrage en mode mémoire local pour le Hackathon (Prêt pour la démo immédiate).');
+  console.log('ℹ️ DATABASE_URL non définie. Démarrage en mode mémoire local pour la plateforme NOVA Tunisie.');
 }
 
 export const query = async (text, params) => {
@@ -181,7 +197,7 @@ export const query = async (text, params) => {
 
 export const getStatus = () => ({
   postgresConnected: isConnectedToPostgres,
-  mode: isConnectedToPostgres ? 'PostgreSQL Database' : 'In-Memory Mock Database'
+  mode: isConnectedToPostgres ? 'PostgreSQL Database' : 'In-Memory Local Database (Tunisie)'
 });
 
 export default {
@@ -189,3 +205,4 @@ export default {
   getStatus,
   mockDatabase
 };
+

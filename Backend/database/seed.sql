@@ -15,22 +15,24 @@ VALUES (
     'École Primaire Jules Ferry'
 ) ON CONFLICT DO NOTHING;
 
--- 2. Insertion des observateurs multi-rôles
-INSERT INTO observateurs (id, nom, role, email, etablissement, specialite)
+-- 2. Insertion des observateurs multi-rôles avec mot de passe
+INSERT INTO observateurs (id, nom, role, email, mot_de_passe, etablissement, specialite)
 VALUES 
 (
     'a1111111-1111-1111-1111-111111111111',
-    'Mme Dupuis',
-    'ENSEIGNANT',
-    'c.dupuis@ecole-julesferry.fr',
-    'École Primaire Jules Ferry',
-    'Professeure des écoles CE1'
+    'Marc & Hélène M.',
+    'FAMILLE',
+    'famille.m@famille-nova.fr',
+    'famille123',
+    'Cercle familial & Activités',
+    'Grands-parents & Proches de Léo'
 ),
 (
     'a2222222-2222-2222-2222-222222222222',
     'Sophie M.',
     'PARENT',
     'sophie.m@parent-nova.fr',
+    'parent123',
     'Domicile familial',
     'Mère de Léo'
 ),
@@ -39,8 +41,9 @@ VALUES
     'Dr. Claire Laurent',
     'SPECIALISTE',
     'c.laurent@reseau-sante.fr',
+    'specialiste123',
     'Centre de Diagnostic Pédiatrique',
-    'Neuropsychologue & Orthophoniste'
+    'Neuropsychologue & Médecin coordonnateur'
 ) ON CONFLICT DO NOTHING;
 
 -- 3. Consentement Parental Actif (Éthique & RGPD)
@@ -54,29 +57,29 @@ VALUES (
 ) ON CONFLICT DO NOTHING;
 
 -- 4. Observations initiales
--- Observation 1 : Enseignante à l'école (Attention soutenue et consignes)
+-- Observation 1 : Famille élargie (Attention & Activités familiales)
 INSERT INTO observations (enfant_id, observateur_id, domaine, contexte, frequence_difficulte, impact_quotidien, reponse_detaillee, exemples_concrets)
 VALUES 
 (
     'e1111111-1111-1111-1111-111111111111',
     'a1111111-1111-1111-1111-111111111111',
     'ATTENTION',
-    'ECOLE',
+    'FAMILLE',
     4,
-    4,
-    'Difficulté persistante à maintenir son attention sur une double consigne écrite ou lors des exercices individuels de plus de 10 minutes.',
-    'Regarde par la fenêtre dès le début de l exercice, oublie souvent la 2ème étape des consignes doubles.'
+    3,
+    'Lors des repas de famille et des jeux de société calmes, Léo a du mal à rester assis plus de 10 minutes et passe constamment d une activité à l autre.',
+    'Quitte souvent la table avant la fin, commence un puzzle puis abandonne pour courir chercher un autre jeu.'
 ),
--- Observation 2 : Enseignante (Motricité / Écriture)
+-- Observation 2 : Famille élargie (Comportement & Gestion des émotions)
 (
     'e1111111-1111-1111-1111-111111111111',
     'a1111111-1111-1111-1111-111111111111',
-    'MOTRICITE',
-    'ECOLE',
+    'COMPORTEMENT',
+    'FAMILLE',
     3,
     2,
-    'Tenue du crayon un peu crispée, lenteur pour copier les devoirs au tableau mais résultat lisible.',
-    'Prend 5 minutes de plus que ses camarades pour copier la date.'
+    'Très affectueux et enthousiaste, mais peut réagir vivement en cas de frustration imprévue avec ses cousins.',
+    'A besoin d un temps de retour au calme à l écart pour réguler son excitation.'
 ),
 -- Observation 3 : Maman à la maison (Attention et devoirs)
 (

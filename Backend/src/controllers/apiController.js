@@ -32,6 +32,57 @@ export const getEnfantById = async (req, res) => {
   }
 };
 
+// --- CRÉATION ENFANT (par les parents) ---
+export const creerEnfant = async (req, res) => {
+  const { prenom, age, niveauScolaire, etablissement, parentId, parentNom } = req.body;
+
+  if (!prenom || !age || !niveauScolaire) {
+    return res.status(400).json({ error: 'Prénom, âge et niveau scolaire sont requis.' });
+  }
+
+  const id = uuidv4();
+  const annee = new Date().getFullYear();
+  const code = `TN-NOVA-${annee}-${Math.floor(100 + Math.random() * 900)}`;
+  const nomAnonyme = `${prenom.charAt(0).toUpperCase()}${prenom.slice(1)} ${(parentNom || 'B.').charAt(0).toUpperCase()}.`;
+
+  const nouvelEnfant = {
+    id,
+    prenom: prenom.trim(),
+    nom_anonyme: nomAnonyme,
+    code_identifiant: code,
+    age: Number(age),
+    niveau_scolaire: niveauScolaire,
+    etablissement: etablissement?.trim() || 'École Primaire (Tunisie)',
+    created_at: new Date().toISOString(),
+  };
+
+  const consentement = {
+    id: uuidv4(),
+    enfant_id: id,
+    parent_id: parentId || 'a2222222-2222-2222-2222-222222222222',
+    statut: 'SIGNE',
+    date_signature: new Date().toISOString(),
+    signature_electronique_hash: `sha256_tn_${Math.random().toString(36).substring(2, 15)}`,
+    remarques_parentales: 'Consentement INADP (Loi 2004-63 Tunisie) accordé lors de l\'inscription de l\'enfant.',
+  };
+
+  // Persist in memory
+  mockDatabase.enfants.push(nouvelEnfant);
+  mockDatabase.consentements.push(consentement);
+
+  // Try PostgreSQL as well
+  try {
+    await db.query(
+      `INSERT INTO enfants (id, prenom, nom_anonyme, code_identifiant, age, niveau_scolaire, etablissement)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [id, nouvelEnfant.prenom, nouvelEnfant.nom_anonyme, code, nouvelEnfant.age, niveauScolaire, nouvelEnfant.etablissement]
+    );
+  } catch (_) { /* fallback already done */ }
+
+  return res.status(201).json({ success: true, enfant: nouvelEnfant, consentement });
+};
+
+
 // --- OBSERVATEURS / AUTH SIMULÉE POUR LE HACKATHON ---
 export const getObservateurs = async (req, res) => {
   try {
@@ -89,6 +140,79 @@ export const enregistrerConsentement = async (req, res) => {
   return res.json({ success: true, consentement: nouveau });
 };
 
+// --- AUTHENTIFICATION (LOGIN 3 RÔLES : ENSEIGNANT, FAMILLE, SPECIALISTE) ---
+export const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Veuillez renseigner un email.' });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+
+  try {
+    let user = null;
+
+    // 1. Chercher dans PostgreSQL si dispo
+    try {
+      const pgRes = await db.query('SELECT * FROM observateurs WHERE LOWER(email) = LOWER($1)', [cleanEmail]);
+      if (pgRes && pgRes.rows.length > 0) {
+        user = pgRes.rows[0];
+      }
+    } catch (_) {}
+
+    // 2. Chercher dans le mock database en mémoire
+    if (!user) {
+      user = mockDatabase.observateurs.find(o => o.email.toLowerCase() === cleanEmail);
+    }
+
+    // 3. Fallback dynamique si l'email n'est pas encore dans la base (nouvelles données Tunisie)
+    if (!user) {
+      if (cleanEmail.includes('education') || cleanEmail.includes('enseignant') || cleanEmail.includes('dupuis') || cleanEmail.includes('trabelsi')) {
+        user = {
+          id: 'a1111111-1111-1111-1111-111111111111',
+          nom: 'Mme Sonia Trabelsi',
+          role: 'ENSEIGNANT',
+          email: cleanEmail,
+          etablissement: 'École Primaire Habib Bourguiba - Tunis',
+          specialite: 'Enseignante Référente 2ème Année'
+        };
+      } else if (cleanEmail.includes('sante') || cleanEmail.includes('specialiste') || cleanEmail.includes('bensalah') || cleanEmail.includes('laurent') || cleanEmail.includes('dr')) {
+        user = {
+          id: 'a3333333-3333-3333-3333-333333333333',
+          nom: 'Dr. Anis Ben Salah',
+          role: 'SPECIALISTE',
+          email: cleanEmail,
+          etablissement: 'Centre de Pédopsychiatrie (Tunis)',
+          specialite: 'Pédopsychiatre & Spécialiste TND'
+        };
+      } else {
+        user = {
+          id: 'a2222222-2222-2222-2222-222222222222',
+          nom: 'Mme Leila & Famille B.',
+          role: 'FAMILLE',
+          email: cleanEmail,
+          etablissement: 'Domicile familial (Tunis)',
+          specialite: 'Tuteurs légaux & Entourage familial'
+        };
+      }
+    }
+
+    const { mot_de_passe, ...safeUser } = user;
+    const token = `nova_session_${safeUser.id}_${Date.now()}`;
+
+    return res.json({
+      success: true,
+      user: safeUser,
+      token
+    });
+  } catch (err) {
+    console.error('Erreur login:', err);
+    return res.status(500).json({ error: 'Erreur interne lors de la connexion.' });
+  }
+};
+
+
 // --- OBSERVATIONS ---
 export const getObservationsByEnfant = async (req, res) => {
   const { enfantId } = req.params;
@@ -104,19 +228,21 @@ export const getObservationsByEnfant = async (req, res) => {
     );
     let rows = pgRes ? pgRes.rows : mockDatabase.observations.filter(o => o.enfant_id === enfantId);
 
-    // Si rôle ENSEIGNANT ou PARENT, l'acteur ne voit QUE ses observations (protection des données)
-    // Seul le SPECIALISTE a accès à la vue synthétique complète
+    // Cloisonnement éthique & RGPD :
+    // - ENSEIGNANT voit uniquement les observations en contexte ECOLE
+    // - FAMILLE voit les observations MAISON + FAMILLE (Parents & entourage)
+    // - SPECIALISTE a accès à la vue transversale complète (tous contextes)
     if (role === 'ENSEIGNANT') {
       rows = rows.filter(o => o.contexte === 'ECOLE');
-    } else if (role === 'PARENT') {
-      rows = rows.filter(o => o.contexte === 'MAISON');
+    } else if (role === 'FAMILLE') {
+      rows = rows.filter(o => o.contexte === 'MAISON' || o.contexte === 'FAMILLE');
     }
 
     return res.json(rows);
   } catch (err) {
     let rows = mockDatabase.observations.filter(o => o.enfant_id === enfantId);
     if (role === 'ENSEIGNANT') rows = rows.filter(o => o.contexte === 'ECOLE');
-    if (role === 'PARENT') rows = rows.filter(o => o.contexte === 'MAISON');
+    if (role === 'FAMILLE') rows = rows.filter(o => o.contexte === 'MAISON' || o.contexte === 'FAMILLE');
     return res.json(rows);
   }
 };

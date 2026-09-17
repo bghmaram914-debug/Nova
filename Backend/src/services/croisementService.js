@@ -113,7 +113,7 @@ export const analyserDomaine = (domaine, observations, activites = []) => {
     // Désaccord franc entre acteurs (ex: école vs maison)
     niveau = NIVEAUX_SIGNAL.DIVERGENCE_DETECTEE;
     justification = `Divergence constatée : une difficulté est observée en milieu ${Array.from(contextesAvecDifficulte).join(', ')}, alors que d autres observateurs ne constatent pas de gène dans leur contexte.`;
-    recommandation = 'Organiser un échange de concertation entre l école et la famille pour comprendre les déclencheurs environnementaux.';
+    recommandation = 'Organiser un échange de concertation entre les parents et l entourage familial pour comprendre les déclencheurs environnementaux.';
   } else if (nombreObservateursDifficulte >= 2 && contextesAvecDifficulte.size === 1) {
     // 2+ concordants mais 1 seul contexte
     niveau = NIVEAUX_SIGNAL.SIGNAL_CONTEXTUEL;

@@ -1,227 +1,147 @@
 import React from 'react';
-import { 
-  GraduationCap, 
-  HeartHandshake, 
-  Gamepad2, 
-  Stethoscope, 
-  ShieldCheck, 
-  Sparkles,
-  RefreshCw,
-  UserCheck
-} from 'lucide-react';
+import { GraduationCap, Users, Stethoscope, ShieldCheck, Sparkles, LogOut, UserCheck, HeartHandshake } from 'lucide-react';
 
-export default function DemoTopBar({ activeRole, setActiveRole, activeChild, onResetDemo }) {
-  const roles = [
-    {
-      id: 'ENSEIGNANT',
-      label: 'Espace Enseignant',
-      sublabel: 'Mme Dupuis (École)',
-      icon: GraduationCap,
-      color: '#2563eb',
-      bgActive: '#eff6ff',
-      borderActive: '#3b82f6'
-    },
-    {
-      id: 'PARENT',
-      label: 'Espace Parent',
-      sublabel: 'Sophie M. (Maison)',
-      icon: HeartHandshake,
-      color: '#059669',
-      bgActive: '#ecfdf5',
-      borderActive: '#10b981'
-    },
-    {
-      id: 'ENFANT',
-      label: 'Espace Enfant',
-      sublabel: 'Léo (Jeu adaptatif)',
-      icon: Gamepad2,
-      color: '#d97706',
-      bgActive: '#fffbeb',
-      borderActive: '#f59e0b'
-    },
-    {
-      id: 'SPECIALISTE',
-      label: 'Espace Spécialiste',
-      sublabel: 'Dr. Laurent (Synthèse)',
-      icon: Stethoscope,
-      color: '#7c3aed',
-      bgActive: '#f5f3ff',
-      borderActive: '#8b5cf6'
-    }
-  ];
+const ROLE_MAP = {
+  ENSEIGNANT:   { label: 'Espace Éducatif & Enseignant', color: '#1d4ed8', bg: '#eff6ff', icon: GraduationCap },
+  FAMILLE:      { label: 'Espace Parental & Entourage',  color: '#7c3aed', bg: '#f5f3ff', icon: Users },
+  SPECIALISTE:  { label: 'Espace Pédopsychiatrique & Clinique', color: '#0d9488', bg: '#f0fdfa', icon: Stethoscope },
+};
+
+export default function DemoTopBar({ activeRole, activeChild, currentUser, onLogout }) {
+  const roleInfo = ROLE_MAP[activeRole] || {};
+  const Icon = roleInfo.icon;
 
   return (
     <header style={{
-      background: 'rgba(255, 255, 255, 0.95)',
-      backdropFilter: 'blur(10px)',
-      borderBottom: '1px solid #e2e8f0',
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+      background: 'rgba(255,255,255,.98)',
+      backdropFilter: 'blur(14px)',
+      borderBottom: '1px solid #e2e8f0',
+      boxShadow: '0 4px 12px rgba(15,23,42,.04)',
     }}>
-      {/* Bandeau Hackathon Pitch */}
+      {/* Bandeau Institutionnel République Tunisienne */}
       <div style={{
-        background: 'linear-gradient(90deg, #1e293b 0%, #0f172a 100%)',
+        background: 'linear-gradient(90deg, #0f172a 0%, #1e1b4b 100%)',
         color: 'white',
-        padding: '6px 20px',
+        padding: '6px 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        fontSize: '0.8rem',
-        letterSpacing: '0.02em'
+        gap: '12px',
+        flexWrap: 'wrap',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ 
-            background: 'linear-gradient(135deg, #38bdf8, #818cf8)', 
-            padding: '2px 8px', 
-            borderRadius: '4px', 
-            fontWeight: 800, 
-            fontSize: '0.75rem',
-            color: '#0f172a'
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '.78rem' }}>
+          <span style={{
+            background: 'linear-gradient(135deg, #e11d48, #be123c)',
+            color: 'white',
+            padding: '2px 9px',
+            borderRadius: '4px',
+            fontWeight: 800,
+            fontSize: '.72rem',
+            letterSpacing: '.04em',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
           }}>
-            HACKATHON DEMO
+            🇹🇳 RÉPUBLIQUE TUNISIENNE
           </span>
-          <span style={{ color: '#cbd5e1' }}>
-            Scénario Démo Jury : <strong>Enseignant ➔ Parent ➔ Enfant (Jeu) ➔ Spécialiste (Profil Explicable)</strong>
+          <span style={{ color: '#cbd5e1', fontWeight: 500 }}>
+            Ministère de la Santé Publique & Ministère de l'Éducation · <strong style={{ color: 'white' }}>Observatoire des Troubles Neurodéveloppementaux (TND)</strong>
           </span>
         </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#86efac' }}>
-            <ShieldCheck size={15} />
-            <span>Consentement RGPD Actif</span>
-          </div>
-          <button 
-            onClick={onResetDemo}
-            title="Réinitialiser le cas démo"
-            style={{
-              background: 'rgba(255,255,255,0.1)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              color: '#e2e8f0',
-              padding: '2px 8px',
-              borderRadius: '6px',
-              fontSize: '0.75rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-          >
-            <RefreshCw size={12} />
-            Recharger Cas Démo
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '.78rem' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#6ee7b7', fontWeight: 600 }}>
+            <ShieldCheck size={14} /> Cadre Légal INADP (Loi 2004-63)
+          </span>
+          <span style={{ color: '#94a3b8', fontSize: '.75rem' }}>
+            Portail National de Santé Infantile
+          </span>
         </div>
       </div>
 
-      {/* Main Header & Role Switcher */}
-      <div className="container" style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px' }}>
-        {/* Brand & Active Child */}
+      {/* Barre de navigation principale */}
+      <div className="container" style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+        {/* Logo & Identité Visuelle */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '12px',
+              width: 40, height: 40, borderRadius: 12,
               background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              boxShadow: '0 4px 12px rgba(37,99,235,0.3)'
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(37,99,235,.25)',
+              flexShrink: 0,
             }}>
-              <Sparkles size={22} />
+              <HeartHandshake size={22} color="white" />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.1 }}>NOVA</h1>
-                <span style={{ fontSize: '0.7rem', color: '#2563eb', background: '#eff6ff', padding: '1px 6px', borderRadius: '10px', fontWeight: 700 }}>v1.0</span>
+                <span style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-.03em' }}>NOVA</span>
+                <span style={{ fontSize: '.68rem', fontWeight: 800, color: '#0284c7', background: '#e0f2fe', padding: '2px 8px', borderRadius: 99 }}>TUNISIE</span>
               </div>
-              <p style={{ fontSize: '0.75rem', color: '#64748b' }}>Détection précoce & collaborative</p>
+              <div style={{ fontSize: '.72rem', color: '#64748b', fontWeight: 500, lineHeight: 1 }}>Détection précoce & Pédopsychologie collaborative</div>
             </div>
           </div>
 
-          <div style={{
-            height: '32px',
-            width: '1px',
-            background: '#e2e8f0',
-            margin: '0 4px'
-          }} />
+          <div style={{ width: 1, height: 32, background: '#e2e8f0', margin: '0 4px' }} />
 
-          {/* Enfant Actif Badge */}
+          {/* Badge Élève / Enfant suivi */}
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: '#f8fafc',
-            border: '1px solid #e2e8f0',
-            padding: '6px 12px',
-            borderRadius: '10px'
+            display: 'flex', alignItems: 'center', gap: '9px',
+            background: '#f8fafc', border: '1.5px solid #e2e8f0',
+            padding: '6px 14px', borderRadius: 12,
           }}>
             <UserCheck size={16} color="#2563eb" />
-            <div style={{ fontSize: '0.85rem' }}>
-              <span style={{ fontWeight: 700, color: '#1e293b' }}>{activeChild?.prenom || 'Léo'} {activeChild?.nom_anonyme ? `(${activeChild.nom_anonyme})` : 'M.'}</span>
-              <span style={{ color: '#64748b', marginLeft: '6px' }}>• {activeChild?.age || 7} ans, {activeChild?.niveau_scolaire || 'CE1'}</span>
+            <div>
+              <span style={{ fontSize: '.84rem', fontWeight: 800, color: '#1e293b' }}>
+                {activeChild?.prenom || 'Youssef'} {activeChild?.nom_anonyme || ''}
+              </span>
+              <span style={{ fontSize: '.76rem', color: '#64748b', marginLeft: 6 }}>
+                · {activeChild?.age || 7} ans, {activeChild?.niveau_scolaire || '2ème Année Primaire'}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* 4 Multi-Actor Switcher Buttons */}
-        <div style={{
-          display: 'flex',
-          background: '#f1f5f9',
-          padding: '4px',
-          borderRadius: '14px',
-          gap: '4px',
-          border: '1px solid #e2e8f0'
-        }}>
-          {roles.map((role) => {
-            const Icon = role.icon;
-            const isActive = activeRole === role.id;
-            return (
-              <button
-                key={role.id}
-                onClick={() => setActiveRole(role.id)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 14px',
-                  borderRadius: '10px',
-                  border: isActive ? `1px solid ${role.borderActive}` : '1px solid transparent',
-                  background: isActive ? '#ffffff' : 'transparent',
-                  boxShadow: isActive ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  textAlign: 'left'
-                }}
-              >
-                <div style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '8px',
-                  background: isActive ? role.bgActive : '#e2e8f0',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <Icon size={16} color={isActive ? role.color : '#64748b'} />
-                </div>
-                <div>
-                  <div style={{
-                    fontSize: '0.82rem',
-                    fontWeight: isActive ? 700 : 600,
-                    color: isActive ? '#0f172a' : '#475569'
-                  }}>
-                    {role.label}
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
-                    {role.sublabel}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+        {/* Côté droit: Rôle actif & Déconnexion */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {Icon && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              background: roleInfo.bg,
+              border: `1.5px solid ${roleInfo.color}35`,
+              padding: '6px 14px', borderRadius: 12,
+            }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: 8,
+                background: roleInfo.color,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: `0 2px 6px ${roleInfo.color}40`,
+              }}>
+                <Icon size={15} color="white" />
+              </div>
+              <div>
+                <div style={{ fontSize: '.82rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>{roleInfo.label}</div>
+                <div style={{ fontSize: '.7rem', color: '#64748b', fontWeight: 600 }}>{currentUser?.nom || 'Session sécurisée'}</div>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={onLogout}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              background: '#white', border: '1.5px solid #cbd5e1',
+              color: '#475569', padding: '8px 14px', borderRadius: 10,
+              fontSize: '.82rem', fontWeight: 700, cursor: 'pointer',
+              transition: 'all .18s ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#dc2626'; e.currentTarget.style.borderColor = '#fca5a5'; e.currentTarget.style.background = '#fef2f2'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = 'white'; }}
+          >
+            <LogOut size={14} /> Déconnexion
+          </button>
         </div>
       </div>
     </header>

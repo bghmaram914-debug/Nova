@@ -3,8 +3,10 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import db from './config/db.js';
 import {
+  loginUser,
   getEnfants,
   getEnfantById,
+  creerEnfant,
   getObservateurs,
   getConsentementByEnfant,
   enregistrerConsentement,
@@ -36,8 +38,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Route Authentification (Login 3 rôles)
+app.post('/api/auth/login', loginUser);
+
 // Routes Enfants & Observateurs
 app.get('/api/enfants', getEnfants);
+app.post('/api/enfants', creerEnfant);
 app.get('/api/enfants/:id', getEnfantById);
 app.get('/api/observateurs', getObservateurs);
 

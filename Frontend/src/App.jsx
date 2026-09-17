@@ -1,117 +1,107 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import DemoTopBar from './components/DemoTopBar';
+import LoginPage from './components/LoginPage';
 import EspaceEnseignant from './components/EspaceEnseignant';
-import EspaceParent from './components/EspaceParent';
-import EspaceEnfant from './components/EspaceEnfant';
+import EspaceFamille from './components/EspaceFamille';
 import EspaceSpecialiste from './components/EspaceSpecialiste';
-import { Sparkles, Shield, HeartHandshake, Database } from 'lucide-react';
+
+const ACTIVE_CHILD = {
+  id: 'e1111111-1111-1111-1111-111111111111',
+  prenom: 'Youssef',
+  nom_anonyme: 'Youssef B.',
+  code_identifiant: 'TN-NOVA-2026-084',
+  age: 7,
+  niveau_scolaire: '2ème Année Primaire',
+  etablissement: 'École Primaire Habib Bourguiba - Tunis'
+};
 
 export default function App() {
-  // Rôle actif pour la démo jury : 'ENSEIGNANT' | 'PARENT' | 'ENFANT' | 'SPECIALISTE'
-  const [activeRole, setActiveRole] = useState('SPECIALISTE');
-  const [activeChild, setActiveChild] = useState({
-    id: 'e1111111-1111-1111-1111-111111111111',
-    prenom: 'Léo',
-    nom_anonyme: 'Léo M.',
-    code_identifiant: 'NOVA-2026-084',
-    age: 7,
-    niveau_scolaire: 'CE1',
-    etablissement: 'École Primaire Jules Ferry'
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('nova_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
   });
+
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [backendStatus, setBackendStatus] = useState(null);
 
-  useEffect(() => {
-    // Vérifier l'état de l'API Backend
-    fetch('http://localhost:5000/api/health')
-      .then(res => res.json())
-      .then(data => setBackendStatus(data))
-      .catch(err => {
-        console.warn('Backend non joignable :', err);
-        setBackendStatus({ status: 'offline' });
-      });
-  }, [refreshTrigger]);
+  const activeRole = currentUser?.role || null;
 
-  const handleDataChanged = () => {
-    setRefreshTrigger(prev => prev + 1);
+  const handleDataChanged = () => setRefreshTrigger(p => p + 1);
+
+  const handleLoginSuccess = (user, token) => {
+    setCurrentUser(user);
+    try {
+      localStorage.setItem('nova_user', JSON.stringify(user));
+      localStorage.setItem('nova_token', token);
+    } catch (e) { console.error(e); }
   };
 
-  const handleResetDemo = () => {
-    fetch('http://localhost:5000/api/demo/reset', { method: 'POST' })
-      .then(() => {
-        handleDataChanged();
-        setActiveRole('SPECIALISTE');
-      })
-      .catch(console.error);
+  const handleLogout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem('nova_user');
+      localStorage.removeItem('nova_token');
+    } catch (e) { console.error(e); }
   };
+
+  if (!currentUser) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Barre Démo Hackathon */}
-      <DemoTopBar 
-        activeRole={activeRole} 
-        setActiveRole={setActiveRole} 
-        activeChild={activeChild}
-        onResetDemo={handleResetDemo}
+      <DemoTopBar
+        activeRole={activeRole}
+        activeChild={ACTIVE_CHILD}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
-      {/* Contenu principal selon le rôle sélectionné */}
-      <main className="container" style={{ flex: 1, paddingTop: '30px', paddingBottom: '30px' }}>
-        {activeRole === 'ENSEIGNANT' && (
-          <EspaceEnseignant 
-            child={activeChild} 
-            onObservationAdded={handleDataChanged}
-            refreshTrigger={refreshTrigger}
-          />
-        )}
-
-        {activeRole === 'PARENT' && (
-          <EspaceParent 
-            child={activeChild} 
-            onObservationAdded={handleDataChanged}
-            refreshTrigger={refreshTrigger}
-          />
-        )}
-
-        {activeRole === 'ENFANT' && (
-          <EspaceEnfant 
-            child={activeChild} 
-            onActivityCompleted={handleDataChanged}
-          />
-        )}
-
-        {activeRole === 'SPECIALISTE' && (
-          <EspaceSpecialiste 
-            child={activeChild} 
-            refreshTrigger={refreshTrigger}
-          />
-        )}
+      <main style={{ flex: 1, padding: '28px 0 48px' }}>
+        <div className="container">
+          {activeRole === 'ENSEIGNANT' && (
+            <EspaceEnseignant
+              child={ACTIVE_CHILD}
+              onObservationAdded={handleDataChanged}
+              refreshTrigger={refreshTrigger}
+              user={currentUser}
+            />
+          )}
+          {activeRole === 'FAMILLE' && (
+            <EspaceFamille
+              child={ACTIVE_CHILD}
+              onObservationAdded={handleDataChanged}
+              refreshTrigger={refreshTrigger}
+              user={currentUser}
+            />
+          )}
+          {activeRole === 'SPECIALISTE' && (
+            <EspaceSpecialiste
+              child={ACTIVE_CHILD}
+              refreshTrigger={refreshTrigger}
+              user={currentUser}
+            />
+          )}
+        </div>
       </main>
 
-      {/* Pied de page */}
       <footer style={{
-        background: '#ffffff',
-        borderTop: '1px solid #e2e8f0',
-        padding: '20px 0',
-        fontSize: '0.85rem',
-        color: '#64748b'
+        borderTop: '1px solid var(--border)',
+        padding: '18px 0',
+        background: 'var(--surface)',
       }}>
         <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontWeight: 800, color: '#2563eb' }}>NOVA</span>
-            <span>• Détection Précoce Collaborative & Explicable (TSA, TDAH, Dys)</span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Shield size={14} color="#10b981" /> Respect RGPD & Consentement
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Database size={14} color="#2563eb" /> {backendStatus?.database?.mode || 'PostgreSQL'}
-            </span>
-          </div>
+          <span style={{ fontSize: '.82rem', color: 'var(--text-sub)' }}>
+            <strong style={{ color: '#1d4ed8', fontWeight: 800 }}>NOVA TUNISIE</strong>
+            {' '}· Observatoire National & Suivi Pédopsychologique — TSA · TDAH · Dys
+          </span>
+          <span style={{ fontSize: '.78rem', color: 'var(--text-muted)' }}>
+            Conforme Loi INADP n° 2004-63 (Tunisie) · Protection des Données Personnelles
+          </span>
         </div>
       </footer>
     </div>
   );
 }
+

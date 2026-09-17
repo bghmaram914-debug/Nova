@@ -19,14 +19,15 @@ CREATE TABLE IF NOT EXISTS enfants (
 );
 
 -- Table: OBSERVATEURS (Utilisateurs avec RBAC)
--- Rôles : 'ENSEIGNANT', 'PARENT', 'SPECIALISTE'
+-- Rôles : 'ENSEIGNANT', 'FAMILLE', 'SPECIALISTE'
 CREATE TABLE IF NOT EXISTS observateurs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     nom VARCHAR(150) NOT NULL,
-    role VARCHAR(50) NOT NULL CHECK (role IN ('ENSEIGNANT', 'PARENT', 'SPECIALISTE')),
+    role VARCHAR(50) NOT NULL CHECK (role IN ('ENSEIGNANT', 'FAMILLE', 'SPECIALISTE')),
     email VARCHAR(255) UNIQUE NOT NULL,
+    mot_de_passe VARCHAR(255) NOT NULL DEFAULT 'demo123',
     etablissement VARCHAR(255),
-    specialite VARCHAR(100), -- Ex: "Orthophoniste", "Psychologue scolaire", "Professeur des écoles"
+    specialite VARCHAR(100),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -45,13 +46,13 @@ CREATE TABLE IF NOT EXISTS consentements (
 
 -- Table: OBSERVATIONS (Formulaires indépendants des acteurs)
 -- Domaines : 'ATTENTION', 'LANGAGE', 'MEMOIRE', 'MOTRICITE', 'COMPORTEMENT'
--- Contextes : 'ECOLE', 'MAISON', 'CABINET'
+-- Contextes : 'MAISON', 'FAMILLE', 'CABINET'
 CREATE TABLE IF NOT EXISTS observations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     enfant_id UUID NOT NULL REFERENCES enfants(id) ON DELETE CASCADE,
     observateur_id UUID NOT NULL REFERENCES observateurs(id) ON DELETE CASCADE,
     domaine VARCHAR(50) NOT NULL CHECK (domaine IN ('ATTENTION', 'LANGAGE', 'MEMOIRE', 'MOTRICITE', 'COMPORTEMENT')),
-    contexte VARCHAR(50) NOT NULL CHECK (contexte IN ('ECOLE', 'MAISON', 'CABINET')),
+    contexte VARCHAR(50) NOT NULL CHECK (contexte IN ('ECOLE', 'MAISON', 'FAMILLE', 'CABINET')),
     frequence_difficulte INT NOT NULL CHECK (frequence_difficulte BETWEEN 1 AND 5), -- 1: Jamais, 3: Parfois, 5: Très fréquent
     impact_quotidien INT NOT NULL CHECK (impact_quotidien BETWEEN 1 AND 5),
     reponse_detaillee TEXT NOT NULL,
