@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import DemoTopBar from './components/DemoTopBar';
+import Sidebar from './components/Sidebar';
 import LoginPage from './components/LoginPage';
 import EspaceEnseignant from './components/EspaceEnseignant';
 import EspaceFamille from './components/EspaceFamille';
@@ -8,15 +8,26 @@ import InscriptionEnfant from './components/InscriptionEnfant';
 import SessionExpiryNotifier from './components/SessionExpiryNotifier';
 import { ArrowLeft } from 'lucide-react';
 
-const ACTIVE_CHILD = {
-  id: 'e1111111-1111-1111-1111-111111111111',
-  prenom: 'Youssef',
-  nom_anonyme: 'Youssef B.',
-  code_identifiant: 'TN-NOVA-2026-084',
-  age: 7,
-  niveau_scolaire: '2ème Année Primaire',
-  etablissement: 'École Primaire Habib Bourguiba - Tunis'
-};
+const DEFAULT_CHILDREN = [
+  {
+    id: 'e1111111-1111-1111-1111-111111111111',
+    prenom: 'Youssef',
+    nom_anonyme: 'B.',
+    code_identifiant: 'TN-NOVA-2026-084',
+    age: 7,
+    niveau_scolaire: '2ème Année Primaire',
+    etablissement: 'École Primaire Habib Bourguiba - Tunis'
+  },
+  {
+    id: 'e2222222-2222-2222-2222-222222222222',
+    prenom: 'Sarra',
+    nom_anonyme: 'M.',
+    code_identifiant: 'TN-NOVA-2026-085',
+    age: 9,
+    niveau_scolaire: '4ème Année Primaire',
+    etablissement: 'École Primaire Ibn Khaldoun - Sfax'
+  },
+];
 
 // Durée de session maximale : 12 Heures (en millisecondes)
 const SESSION_DURATION_MS = 12 * 60 * 60 * 1000;
@@ -31,9 +42,26 @@ export default function App() {
     } catch { return null; }
   });
 
-  const [activeChild, setActiveChild] = useState(ACTIVE_CHILD);
+  const [enfantsList, setEnfantsList] = useState(DEFAULT_CHILDREN);
+  const [activeChild, setActiveChild] = useState(DEFAULT_CHILDREN[0]);
   const [isRegisteringChild, setIsRegisteringChild] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Charger la liste des enfants depuis l'API
+  useEffect(() => {
+    if (!currentUser) return;
+    fetch('/api/enfants', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('nova_token') || ''}` }
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setEnfantsList(data);
+          setActiveChild(prev => data.find(e => e.id === prev?.id) || data[0]);
+        }
+      })
+      .catch(() => {/* fallback sur DEFAULT_CHILDREN */});
+  }, [currentUser, refreshTrigger]);
 
   // Gestion de la session (12h auto-logout & alerte 5 min avant)
   const [remainingSeconds, setRemainingSeconds] = useState(null);
@@ -127,7 +155,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', background: '#F7FAFC' }}>
       {/* Alerte flottante & modale 5 minutes avant la déconnexion automatique (12h) */}
       {showWarning && remainingSeconds !== null && (
         <SessionExpiryNotifier
@@ -137,17 +165,18 @@ export default function App() {
         />
       )}
 
-      <DemoTopBar
+      <Sidebar
         activeRole={activeRole}
         activeChild={activeChild}
+        enfantsList={enfantsList}
+        onSelectChild={setActiveChild}
         currentUser={currentUser}
         onLogout={() => handleLogout()}
-        onOpenInscription={() => setIsRegisteringChild(true)}
+        onOpenInscription={activeRole === 'FAMILLE' ? () => setIsRegisteringChild(true) : undefined}
         remainingSeconds={remainingSeconds}
       />
 
-      <main style={{ flex: 1, padding: '28px 0 48px' }}>
-        <div className="container">
+      <main style={{ flex: 1, padding: '32px 40px 48px', overflowY: 'auto', minHeight: '100vh' }}>
           {isRegisteringChild ? (
             <div style={{ maxWidth: 840, margin: '0 auto' }} className="fade-in">
               <div style={{ marginBottom: 16 }}>
@@ -214,24 +243,7 @@ export default function App() {
               )}
             </>
           )}
-        </div>
       </main>
-
-      <footer style={{
-        borderTop: '1px solid var(--border)',
-        padding: '18px 0',
-        background: 'var(--surface)',
-      }}>
-        <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-          <span style={{ fontSize: '.82rem', color: 'var(--text-sub)' }}>
-            <strong style={{ color: '#1d4ed8', fontWeight: 800 }}>NOVA TUNISIE</strong>
-            {' '}· Observatoire National & Suivi Pédopsychologique — TSA · TDAH · Dys
-          </span>
-          <span style={{ fontSize: '.78rem', color: 'var(--text-muted)' }}>
-            Conforme Loi INADP n° 2004-63 (Tunisie) · Protection des Données Personnelles · Déconnexion auto 12h
-          </span>
-        </div>
-      </footer>
     </div>
   );
 }

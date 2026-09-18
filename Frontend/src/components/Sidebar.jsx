@@ -1,0 +1,208 @@
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  GraduationCap, Users, Stethoscope, LogOut, HeartHandshake,
+  Clock, UserCheck, Sparkles, ChevronDown, Check, Shield,
+} from 'lucide-react';
+
+const ROLE_META = {
+  ENSEIGNANT:  { label: 'Enseignant',   color: '#17324D', bg: 'rgba(23,50,77,.08)',    icon: GraduationCap },
+  FAMILLE:     { label: 'Famille',      color: '#58B6A9', bg: 'rgba(88,182,169,.10)',  icon: Users },
+  SPECIALISTE: { label: 'Spécialiste',  color: '#3d9b8e', bg: 'rgba(61,155,142,.10)', icon: Stethoscope },
+};
+
+function formatChildName(child) {
+  if (!child) return 'Enfant';
+  const prenom = child.prenom || '';
+  const nom    = child.nom_anonyme || '';
+  return nom.toLowerCase().startsWith(prenom.toLowerCase()) ? nom : `${prenom} ${nom}`.trim();
+}
+
+function formatTime(secs) {
+  if (secs == null) return null;
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  return h > 0 ? `${h}h ${String(m).padStart(2,'0')}m` : `${m}m ${String(s).padStart(2,'0')}s`;
+}
+
+export default function Sidebar({
+  activeRole, activeChild, enfantsList = [], onSelectChild,
+  currentUser, onLogout, onOpenInscription, remainingSeconds,
+}) {
+  const meta = ROLE_META[activeRole] || { label: 'NOVA', color: '#17324D', bg: 'rgba(23,50,77,.08)', icon: HeartHandshake };
+  const RoleIcon = meta.icon;
+  const [childOpen, setChildOpen] = useState(false);
+  const dropRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (dropRef.current && !dropRef.current.contains(e.target)) setChildOpen(false); };
+    if (childOpen) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [childOpen]);
+
+  const warningTime = remainingSeconds != null && remainingSeconds <= 300;
+
+  return (
+    <aside style={{
+      width: 260,
+      minWidth: 260,
+      height: '100vh',
+      position: 'sticky',
+      top: 0,
+      background: '#17324D',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+    }}>
+      {/* ── Logo ── */}
+      <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 12,
+            background: 'linear-gradient(135deg, #58B6A9 0%, #B9DDF2 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(88,182,169,.35)', flexShrink: 0,
+          }}>
+            <HeartHandshake size={20} color="#17324D" />
+          </div>
+          <div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#fff', letterSpacing: '-.02em', lineHeight: 1 }}>NOVA</div>
+            <div style={{ fontSize: '.58rem', color: '#B9DDF2', letterSpacing: '.12em', fontWeight: 700 }}>TUNISIE · SANTÉ</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Espace actif (rôle) ── */}
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
+        <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, letterSpacing: '.08em', marginBottom: 8, textTransform: 'uppercase' }}>Espace actif</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(88,182,169,.12)', borderRadius: 10, border: '1px solid rgba(88,182,169,.2)' }}>
+          <RoleIcon size={16} color="#58B6A9" />
+          <div>
+            <div style={{ fontSize: '.84rem', fontWeight: 800, color: '#fff' }}>{meta.label}</div>
+            <div style={{ fontSize: '.7rem', color: '#94a3b8' }}>{currentUser?.nom || 'Utilisateur'}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Sélecteur enfant ── */}
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,.06)' }} ref={dropRef}>
+        <div style={{ fontSize: '.65rem', color: '#64748b', fontWeight: 700, letterSpacing: '.08em', marginBottom: 8, textTransform: 'uppercase' }}>Enfant suivi</div>
+        <button
+          onClick={() => enfantsList.length > 0 && setChildOpen(o => !o)}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 8,
+            background: 'rgba(255,255,255,.05)',
+            border: `1px solid ${childOpen ? 'rgba(88,182,169,.5)' : 'rgba(255,255,255,.08)'}`,
+            borderRadius: 10, padding: '8px 12px',
+            cursor: enfantsList.length > 0 ? 'pointer' : 'default',
+            fontFamily: 'inherit', transition: 'all .15s ease',
+          }}
+        >
+          <UserCheck size={15} color="#58B6A9" style={{ flexShrink: 0 }} />
+          <div style={{ flex: 1, textAlign: 'left', minWidth: 0 }}>
+            <div style={{ fontSize: '.84rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {formatChildName(activeChild)}
+            </div>
+            <div style={{ fontSize: '.7rem', color: '#64748b' }}>
+              {activeChild?.age || '—'} ans · {activeChild?.code_identifiant || '—'}
+            </div>
+          </div>
+          {enfantsList.length > 0 && (
+            <ChevronDown size={13} color="#64748b" style={{ flexShrink: 0, transform: childOpen ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }} />
+          )}
+        </button>
+
+        {/* Dropdown enfants */}
+        {childOpen && (
+          <div style={{
+            marginTop: 6, background: '#0f2035', border: '1px solid rgba(88,182,169,.2)',
+            borderRadius: 10, overflow: 'hidden',
+            boxShadow: '0 8px 24px rgba(0,0,0,.35)',
+            animation: 'fadeIn .12s ease',
+          }}>
+            {enfantsList.map(child => {
+              const isActive = child.id === activeChild?.id;
+              return (
+                <button key={child.id} onClick={() => { onSelectChild?.(child); setChildOpen(false); }}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    width: '100%', padding: '9px 14px', border: 'none',
+                    borderBottom: '1px solid rgba(255,255,255,.04)',
+                    background: isActive ? 'rgba(88,182,169,.12)' : 'transparent',
+                    cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+                    transition: 'background .1s',
+                  }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,.05)'; }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <div>
+                    <div style={{ fontSize: '.82rem', fontWeight: 700, color: isActive ? '#58B6A9' : '#e2e8f0' }}>{formatChildName(child)}</div>
+                    <div style={{ fontSize: '.7rem', color: '#64748b' }}>{child.age} ans · {child.code_identifiant}</div>
+                  </div>
+                  {isActive && <Check size={13} color="#58B6A9" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Actions ── */}
+      <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {onOpenInscription && (
+          <button onClick={onOpenInscription} style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            background: 'rgba(88,182,169,.12)', border: '1px solid rgba(88,182,169,.25)',
+            color: '#58B6A9', padding: '9px 14px', borderRadius: 10,
+            fontSize: '.82rem', fontWeight: 700, cursor: 'pointer',
+            fontFamily: 'inherit', transition: 'all .15s ease', width: '100%',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(88,182,169,.22)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(88,182,169,.12)'; }}
+          >
+            <Sparkles size={14} color="#58B6A9" /> + Inscrire un enfant
+          </button>
+        )}
+      </div>
+
+      {/* ── Spacer ── */}
+      <div style={{ flex: 1 }} />
+
+      {/* ── Bas : Session + Déconnexion ── */}
+      <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,.08)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {remainingSeconds != null && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
+            background: warningTime ? 'rgba(220,38,38,.15)' : 'rgba(255,255,255,.05)',
+            border: `1px solid ${warningTime ? 'rgba(220,38,38,.3)' : 'rgba(255,255,255,.08)'}`,
+            borderRadius: 10,
+          }}>
+            <Clock size={14} color={warningTime ? '#f87171' : '#58B6A9'} />
+            <div>
+              <div style={{ fontSize: '.7rem', color: '#64748b' }}>Session active</div>
+              <div style={{ fontSize: '.82rem', fontWeight: 700, color: warningTime ? '#f87171' : '#e2e8f0' }}>{formatTime(remainingSeconds)}</div>
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px' }}>
+          <Shield size={12} color="#475569" />
+          <span style={{ fontSize: '.65rem', color: '#475569' }}>INADP Loi 2004-63</span>
+        </div>
+
+        <button onClick={onLogout} style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: 'transparent', border: '1px solid rgba(255,255,255,.1)',
+          color: '#94a3b8', padding: '9px 14px', borderRadius: 10,
+          fontSize: '.82rem', fontWeight: 600, cursor: 'pointer',
+          fontFamily: 'inherit', transition: 'all .15s ease', width: '100%',
+        }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,.1)'; e.currentTarget.style.color = '#f87171'; e.currentTarget.style.borderColor = 'rgba(220,38,38,.3)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.1)'; }}
+        >
+          <LogOut size={14} /> Déconnexion
+        </button>
+      </div>
+    </aside>
+  );
+}

@@ -86,8 +86,8 @@ export default function EspaceFamilleElargie({ child, onObservationAdded, user }
                     type="button"
                     onClick={() => setDomaine(opt.id)}
                     style={{
-                      border: isSelected ? '2px solid #d97706' : '1px solid #e2e8f0',
-                      background: isSelected ? '#fffbeb' : '#ffffff',
+                      border: isSelected ? '2px solid #58B6A9' : '1px solid #e2e8f0',
+                      background: isSelected ? 'rgba(88,182,169,.06)' : '#ffffff',
                       borderRadius: 10,
                       padding: '10px 12px',
                       cursor: 'pointer',
@@ -95,7 +95,7 @@ export default function EspaceFamilleElargie({ child, onObservationAdded, user }
                       transition: 'all .15s ease',
                     }}
                   >
-                    <div style={{ fontWeight: 700, fontSize: '.84rem', color: isSelected ? '#b45309' : '#1e293b' }}>
+                    <div style={{ fontWeight: 700, fontSize: '.84rem', color: isSelected ? '#17324D' : '#1e293b' }}>
                       {opt.label}
                     </div>
                     <div style={{ fontSize: '.72rem', color: '#64748b', marginTop: 2 }}>{opt.desc}</div>
@@ -106,7 +106,7 @@ export default function EspaceFamilleElargie({ child, onObservationAdded, user }
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+            <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#17324D', marginBottom: 4 }}>
               2. Ce que vous avez remarqué en famille
             </label>
             <textarea
@@ -120,7 +120,7 @@ export default function EspaceFamilleElargie({ child, onObservationAdded, user }
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+            <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#17324D', marginBottom: 4 }}>
               3. Exemple concret
             </label>
             <input
@@ -137,7 +137,7 @@ export default function EspaceFamilleElargie({ child, onObservationAdded, user }
               type="submit"
               disabled={loading}
               style={{
-                background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+                background: 'linear-gradient(135deg, #17324D 0%, #0f2035 100%)',
                 color: 'white',
                 border: 'none',
                 padding: '10px 20px',
@@ -148,7 +148,7 @@ export default function EspaceFamilleElargie({ child, onObservationAdded, user }
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                boxShadow: '0 2px 8px rgba(217,119,6,.25)',
+                boxShadow: '0 2px 8px rgba(23,50,77,.2)',
               }}
             >
               <Send size={14} />

@@ -332,14 +332,31 @@ export default function InscriptionEnfant({ onEnfantAjoute }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 text-base disabled:opacity-50"
+          style={{
+            width: '100%',
+            padding: '14px 20px',
+            background: 'linear-gradient(135deg, #17324D 0%, #0f2035 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: 12,
+            fontWeight: 800,
+            fontSize: '1rem',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            boxShadow: '0 4px 14px rgba(23,50,77,.25)',
+            transition: 'all .2s ease',
+            opacity: loading ? 0.7 : 1,
+          }}
         >
           {loading ? (
             <span>Validation du dossier...</span>
           ) : (
             <>
               <span>Enregistrer le dossier enfant</span>
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-5 h-5 text-[#58B6A9]" />
             </>
           )}
         </button>

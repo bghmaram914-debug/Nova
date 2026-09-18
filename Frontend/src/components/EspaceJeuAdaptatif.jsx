@@ -275,7 +275,7 @@ export default function EspaceJeuAdaptatif({ child, user }) {
                 );
               })}
             </div>
-            <button onClick={submitAttention} style={{ background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '12px', padding: '12px 24px', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem' }}>
+            <button onClick={submitAttention} style={{ background: 'linear-gradient(135deg, #17324D 0%, #0f2035 100%)', color: 'white', border: 'none', borderRadius: '12px', padding: '12px 24px', fontWeight: 800, cursor: 'pointer', fontSize: '0.95rem', boxShadow: '0 4px 12px rgba(23,50,77,.2)' }}>
               Valider ma réponse
             </button>
           </div>
@@ -299,7 +299,7 @@ export default function EspaceJeuAdaptatif({ child, user }) {
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
               <button onClick={() => setSelected([])} style={{ background: '#f1f5f9', border: 'none', borderRadius: '10px', padding: '8px 16px', cursor: 'pointer', color: '#64748b', fontSize: '0.85rem' }}>Effacer</button>
               <button onClick={submitMemoire} disabled={selected.length < scene.sequence.length}
-                style={{ background: selected.length >= scene.sequence.length ? '#0ea5e9' : '#cbd5e1', color: 'white', border: 'none', borderRadius: '10px', padding: '8px 18px', cursor: selected.length >= scene.sequence.length ? 'pointer' : 'not-allowed', fontWeight: 700 }}>
+                style={{ background: selected.length >= scene.sequence.length ? 'linear-gradient(135deg, #17324D 0%, #0f2035 100%)' : '#cbd5e1', color: 'white', border: 'none', borderRadius: '10px', padding: '8px 18px', cursor: selected.length >= scene.sequence.length ? 'pointer' : 'not-allowed', fontWeight: 800 }}>
                 Valider
               </button>
             </div>
@@ -309,14 +309,14 @@ export default function EspaceJeuAdaptatif({ child, user }) {
         {/* PLAY — émotion */}
         {phase === 'play' && scene.id === 'emotion' && (
           <div style={{ textAlign: 'center', width: '100%', maxWidth: '520px' }}>
-            <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: '14px', padding: '14px 20px', marginBottom: '20px', fontSize: '0.95rem', color: '#92400e' }}>
+            <div style={{ background: 'rgba(88,182,169,.08)', border: '1px solid #58B6A9', borderRadius: '14px', padding: '14px 20px', marginBottom: '20px', fontSize: '0.95rem', color: '#17324D', fontWeight: 600 }}>
               {scene.situation}
             </div>
             <p style={{ fontWeight: 700, color: '#0f172a', marginBottom: '14px' }}>{scene.instruction}</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
               {scene.emotions.map(em => (
                 <button key={em.label} onClick={() => handleEmotionPick(em.label)}
-                  style={{ background: answer === em.label ? '#dbeafe' : '#f8fafc', border: answer === em.label ? '2px solid #3b82f6' : '2px solid #e2e8f0', borderRadius: '14px', padding: '14px 10px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s ease' }}>
+                  style={{ background: answer === em.label ? 'rgba(88,182,169,.12)' : '#f8fafc', border: answer === em.label ? '2px solid #58B6A9' : '2px solid #e2e8f0', borderRadius: '14px', padding: '14px 10px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s ease' }}>
                   <div style={{ fontSize: '2.4rem', marginBottom: '4px' }}>{em.emoji}</div>
                   <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569' }}>{em.label}</div>
                 </button>
@@ -331,18 +331,18 @@ export default function EspaceJeuAdaptatif({ child, user }) {
             <div style={{ fontSize: '3.5rem', marginBottom: '10px' }}>
               {feedback === 'correct' ? '🎉' : '👍'}
             </div>
-            <h3 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0f172a', marginBottom: '6px' }}>
+            <h3 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#17324D', marginBottom: '6px' }}>
               {feedback === 'correct' ? 'Excellent !' : 'Bien essayé !'}
             </h3>
             <div style={{ marginBottom: '18px' }}>
               <StarBurst count={sessionData[sessionData.length - 1]?.stars || 3} />
             </div>
             {sceneIdx + 1 < SCENES.length ? (
-              <button onClick={nextScene} style={{ background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', color: 'white', border: 'none', borderRadius: '14px', padding: '13px 26px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                Mini-jeu suivant <ChevronRight size={18} />
+              <button onClick={nextScene} style={{ background: 'linear-gradient(135deg, #17324D 0%, #0f2035 100%)', color: 'white', border: 'none', borderRadius: '14px', padding: '13px 26px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(23,50,77,.25)' }}>
+                Mini-jeu suivant <ChevronRight size={18} color="#58B6A9" />
               </button>
             ) : (
-              <button onClick={() => setSessionDone(true)} style={{ background: 'linear-gradient(135deg, #f59e0b, #fbbf24)', color: 'white', border: 'none', borderRadius: '14px', padding: '13px 26px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <button onClick={() => setSessionDone(true)} style={{ background: 'linear-gradient(135deg, #58B6A9 0%, #3d9b8e 100%)', color: 'white', border: 'none', borderRadius: '14px', padding: '13px 26px', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(88,182,169,.3)' }}>
                 <Trophy size={18} /> Voir mes résultats
               </button>
             )}

@@ -47,33 +47,33 @@ export default function EspaceParent({ child, onObservationAdded, user }) {
     }
   };
 
-  const color = '#7c3aed';
+  const color = '#58B6A9';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {success && (
         <div style={{
-          background: '#ecfdf5',
-          border: '1px solid #a7f3d0',
+          background: 'rgba(88,182,169,.1)',
+          border: '1px solid #58B6A9',
           borderRadius: 10,
           padding: '10px 16px',
-          color: '#065f46',
+          color: '#17324D',
           fontWeight: 700,
           fontSize: '.84rem',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
         }}>
-          <CheckCircle2 size={16} color="#059669" />
+          <CheckCircle2 size={16} color="#58B6A9" />
           <span>Votre observation a été transmise aux spécialistes.</span>
         </div>
       )}
 
-      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+      <div style={{ background: 'white', borderRadius: 16, border: '1px solid #e2e8f0', padding: 24, boxShadow: '0 2px 8px rgba(23,50,77,.04)' }}>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           {/* Choix du domaine */}
           <div>
-            <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#334155', marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#17324D', marginBottom: 8 }}>
               1. Domaine observé à la maison
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 8 }}>
@@ -88,13 +88,13 @@ export default function EspaceParent({ child, onObservationAdded, user }) {
                       padding: '10px 12px',
                       borderRadius: 10,
                       border: sel ? `2px solid ${color}` : '1px solid #e2e8f0',
-                      background: sel ? '#f5f3ff' : '#ffffff',
+                      background: sel ? 'rgba(88,182,169,.06)' : '#ffffff',
                       cursor: 'pointer',
                       textAlign: 'left',
                       transition: 'all .15s ease',
                     }}
                   >
-                    <div style={{ fontWeight: 700, fontSize: '.84rem', color: sel ? color : '#1e293b' }}>
+                    <div style={{ fontWeight: 700, fontSize: '.84rem', color: sel ? '#17324D' : '#1e293b' }}>
                       {d.label}
                     </div>
                     <div style={{ fontSize: '.72rem', color: '#64748b', marginTop: 2 }}>{d.desc}</div>
@@ -106,9 +106,9 @@ export default function EspaceParent({ child, onObservationAdded, user }) {
 
           {/* Fréquence */}
           <div style={{ background: '#f8fafc', padding: 14, borderRadius: 10, border: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.78rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '.78rem', fontWeight: 700, color: '#17324D', marginBottom: 4 }}>
               <span>2. Fréquence des difficultés constatées</span>
-              <span style={{ color: color }}>{FREQ_LABELS[frequence]}</span>
+              <span style={{ color: color, fontWeight: 800 }}>{FREQ_LABELS[frequence]}</span>
             </div>
             <input
               type="range"
@@ -122,7 +122,7 @@ export default function EspaceParent({ child, onObservationAdded, user }) {
 
           {/* Détails */}
           <div>
-            <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+            <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#17324D', marginBottom: 4 }}>
               3. Vos observations à la maison pour {child?.prenom || 'votre enfant'}
             </label>
             <textarea
@@ -136,7 +136,7 @@ export default function EspaceParent({ child, onObservationAdded, user }) {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#334155', marginBottom: 4 }}>
+            <label style={{ display: 'block', fontSize: '.82rem', fontWeight: 700, color: '#17324D', marginBottom: 4 }}>
               4. Exemple concret
             </label>
             <input
@@ -153,7 +153,7 @@ export default function EspaceParent({ child, onObservationAdded, user }) {
               type="submit"
               disabled={loading}
               style={{
-                background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+                background: 'linear-gradient(135deg, #17324D 0%, #0f2035 100%)',
                 color: 'white',
                 border: 'none',
                 padding: '10px 20px',
@@ -164,7 +164,7 @@ export default function EspaceParent({ child, onObservationAdded, user }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 6,
-                boxShadow: '0 2px 8px rgba(124,58,237,.25)',
+                boxShadow: '0 2px 8px rgba(23,50,77,.2)',
               }}
             >
               <Send size={14} />

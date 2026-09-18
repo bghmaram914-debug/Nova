@@ -7,9 +7,9 @@ import {
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 
-// ─────────────────────────────────────────────────────────────
+// ��������������������������������������������������������������������������������������������������������������������������
 // MOCK DATA CLINIQUE (TUNISIE)
-// ─────────────────────────────────────────────────────────────
+// ��������������������������������������������������������������������������������������������������������������������������
 const MOCK_PROFILE = {
   signals: [
     { domaine: 'ATTENTION',    libelle: 'Attention & Consignes',       niveau: 'SIGNAL_FORT',       score: 78, description: 'Convergence forte entre école et maison sur les difficultés d\'attention soutenue.' },
@@ -36,11 +36,11 @@ const MOCK_JEUX = [
 ];
 
 const DOMAIN_ICONS = {
-  ATTENTION: '🎯',
-  LANGAGE: '💬',
-  MEMOIRE: '🧠',
-  MOTRICITE: '✏️',
-  COMPORTEMENT: '🏫',
+  ATTENTION: '�x}�',
+  LANGAGE: '�x�',
+  MEMOIRE: '�x��',
+  MOTRICITE: '�S�️',
+  COMPORTEMENT: '�x��',
 };
 
 function SignalBadge({ niveau }) {
@@ -49,16 +49,16 @@ function SignalBadge({ niveau }) {
   return <span style={{ background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0', padding: '2px 8px', borderRadius: 6, fontSize: '.72rem', fontWeight: 700 }}>Pas de signal</span>;
 }
 
-// ─────────────────────────────────────────────────────────────
-// GÉNÉRATEUR ET TÉLÉCHARGEMENT DIRECT DU FICHIER PDF
-// ─────────────────────────────────────────────────────────────
+// ��������������������������������������������������������������������������������������������������������������������������
+// G�0N�0RATEUR ET T�0L�0CHARGEMENT DIRECT DU FICHIER PDF
+// ��������������������������������������������������������������������������������������������������������������������������
 export const generateAndDownloadNovaPDF = (child, profil) => {
   try {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const childName = `${child?.prenom || 'Youssef'} ${child?.nom_anonyme || 'B.'}`;
     const childCode = child?.code_identifiant || 'TN-NOVA-2026-084';
     const ageNiveau = `${child?.age || 7} ans · ${child?.niveau_scolaire || '2ème Année Primaire'}`;
-    const etablissement = child?.etablissement || 'École Primaire Habib Bourguiba - Tunis';
+    const etablissement = child?.etablissement || '�0cole Primaire Habib Bourguiba - Tunis';
     const today = new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
 
     // 1. Bandeau supérieur institutionnel
@@ -67,13 +67,13 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setTextColor(239, 68, 68);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
-    doc.text("RÉPUBLIQUE TUNISIENNE", 14, 9);
+    doc.text("R�0PUBLIQUE TUNISIENNE", 14, 9);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'normal');
-    doc.text("· MINISTÈRE DE LA SANTÉ PUBLIQUE & MINISTÈRE DE L'ÉDUCATION", 58, 9);
+    doc.text("· MINIST��RE DE LA SANT�0 PUBLIQUE & MINIST��RE DE L'�0DUCATION", 58, 9);
     doc.setTextColor(148, 163, 184);
     doc.setFontSize(7.2);
-    doc.text("OBSERVATOIRE DES TROUBLES NEURODÉVELOPPEMENTAUX (TND) · PROTOCOLE NATIONAL", 14, 16);
+    doc.text("OBSERVATOIRE DES TROUBLES NEUROD�0VELOPPEMENTAUX (TND) · PROTOCOLE NATIONAL", 14, 16);
     doc.setTextColor(110, 231, 183);
     doc.text("Conforme Loi INADP 2004-63", 152, 16);
 
@@ -81,11 +81,11 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setTextColor(29, 78, 216);
     doc.setFontSize(15);
     doc.setFont('helvetica', 'bold');
-    doc.text("NOVA TUNISIE — BILAN CLINIQUE DE SYNTHÈSE", 14, 34);
+    doc.text("NOVA TUNISIE � BILAN CLINIQUE DE SYNTH��SE", 14, 34);
     doc.setTextColor(71, 85, 105);
     doc.setFontSize(8.5);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Compte-rendu Pédopsychiatrique & Recommandations d'Aménagements · Édition du ${today}`, 14, 40);
+    doc.text(`Compte-rendu Pédopsychiatrique & Recommandations d'Aménagements · �0dition du ${today}`, 14, 40);
     doc.setDrawColor(226, 232, 240);
     doc.setLineWidth(0.4);
     doc.line(14, 43, 196, 43);
@@ -97,9 +97,9 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setTextColor(100, 116, 139);
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
-    doc.text("CODE PATIENT SÉCURISÉ", 18, 54);
-    doc.text("IDENTITÉ DU PATIENT", 80, 54);
-    doc.text("ÂGE & SCOLARITÉ", 140, 54);
+    doc.text("CODE PATIENT S�0CURIS�0", 18, 54);
+    doc.text("IDENTIT�0 DU PATIENT", 80, 54);
+    doc.text("�GE & SCOLARIT�0", 140, 54);
     doc.setTextColor(29, 78, 216);
     doc.setFontSize(10.5);
     doc.text(childCode, 18, 60);
@@ -116,7 +116,7 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(10.5);
     doc.setFont('helvetica', 'bold');
-    doc.text("1. SIGNAUX NEURODÉVELOPPEMENTAUX DÉTECTÉS PAR DOMAINE", 14, y);
+    doc.text("1. SIGNAUX NEUROD�0VELOPPEMENTAUX D�0TECT�0S PAR DOMAINE", 14, y);
     y += 5;
 
     const signals = (profil?.signals && profil.signals.length > 0) ? profil.signals : MOCK_PROFILE.signals;
@@ -165,7 +165,7 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(10.5);
     doc.setFont('helvetica', 'bold');
-    doc.text("2. PRÉCONISATIONS MÉDICALES & AMÉNAGEMENTS SCOLAIRES", 14, y);
+    doc.text("2. PR�0CONISATIONS M�0DICALES & AM�0NAGEMENTS SCOLAIRES", 14, y);
     y += 5;
 
     doc.setFillColor(240, 253, 244);
@@ -175,7 +175,7 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     const recos = [
-      "- Bilan neuropsychologique approfondi : Évaluation des fonctions exécutives et de l'attention soutenue.",
+      "- Bilan neuropsychologique approfondi : �0valuation des fonctions exécutives et de l'attention soutenue.",
       "- Aménagements scolaires en classe : Majoration du temps (+25%), simplification des doubles consignes.",
       "- Aménagement ergonomique : Placement face au tableau pour limiter les distracteurs visuels et sonores.",
       "- Suivi collaboratif & contrôle : Réévaluation pluridisciplinaire planifiée à 3 mois via NOVA Tunisie."
@@ -220,7 +220,7 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setTextColor(71, 85, 105);
     doc.setFontSize(7.2);
     doc.setFont('helvetica', 'normal');
-    doc.text("Ministère de l'Éducation · Direction Régionale", 112, y + 16);
+    doc.text("Ministère de l'�0ducation · Direction Régionale", 112, y + 16);
     doc.text("Dossier d'adaptation pédagogique", 112, y + 20.5);
     doc.setDrawColor(203, 213, 225);
     doc.line(112, y + 25, 190, y + 25);
@@ -230,7 +230,7 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     // 7. Pied de page
     doc.setTextColor(148, 163, 184);
     doc.setFontSize(7);
-    doc.text("NOVA TUNISIE — Document officiel généré sous contrôle médical (Loi INADP n° 2004-63).", 14, 288);
+    doc.text("NOVA TUNISIE � Document officiel généré sous contrôle médical (Loi INADP n° 2004-63).", 14, 288);
     doc.text("Page 1 / 1", 188, 288);
 
     const sanitizedName = (child?.nom_anonyme || child?.prenom || 'Enfant').replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -243,9 +243,9 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
   }
 };
 
-// ─────────────────────────────────────────────────────────────
-// COMPOSANT PRINCIPAL ESPACE SPÉCIALISTE ÉPURÉ
-// ─────────────────────────────────────────────────────────────
+// ��������������������������������������������������������������������������������������������������������������������������
+// COMPOSANT PRINCIPAL ESPACE SP�0CIALISTE �0PUR�0
+// ��������������������������������������������������������������������������������������������������������������������������
 export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
   const [page, setPage] = useState('dashboard');
   const [profil, setProfil] = useState(MOCK_PROFILE);
@@ -273,25 +273,83 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
 
   const navTabs = [
     { id: 'dashboard',    label: 'Tableau de bord & Signaux', icon: BarChart3 },
-    { id: 'observations', label: 'Observations École & Famille', icon: Users },
-    { id: 'jeux',         label: 'Jeux & Télémétrie', icon: Gamepad2 },
-    { id: 'decision',     label: 'Bilan Médical & Décision', icon: FileCheck },
+    { id: 'observations', label: 'Observations �cole & Famille', icon: Users },
+    { id: 'jeux',         label: 'Jeux & T�l�m�trie', icon: Gamepad2 },
+    { id: 'decision',     label: 'Bilan M�dical & D�cision', icon: FileCheck },
+  ];
+
+  const STATS = [
+    { label: 'Score de convergence', value: `${profil.convergenceScore}%`, icon: Brain, color: '#17324D', bg: 'rgba(23,50,77,.07)' },
+    { label: 'Signaux forts d�cel�s', value: profil.signals.filter(s => s.niveau === 'SIGNAL_FORT').length || '1', icon: Activity, color: '#e11d48', bg: 'rgba(225,29,72,.08)' },
+    { label: 'Sessions t�l�m�trie', value: `${profil.telemetrie?.sessions || 8}`, icon: Gamepad2, color: '#58B6A9', bg: 'rgba(88,182,169,.1)' },
+    { label: 'Avis m�dical', value: decision ? 'En cours' : '� valider', icon: ShieldCheck, color: '#3d9b8e', bg: 'rgba(61,155,142,.1)' },
   ];
 
   return (
-    <div style={{ maxWidth: 980, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }} className="fade-up">
-      {/* Barre de navigation simplifiée */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }} className="fade-up">
+      {/*    En-t�te de page Donezo Style    */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#17324D', margin: 0, letterSpacing: '-.02em' }}>
+            Espace Sp�cialiste & P�dopsychiatrie
+          </h1>
+          <p style={{ fontSize: '.88rem', color: '#64748b', margin: '4px 0 0' }}>
+            Analyse crois�e multi-sources, signaux faibles & dossier m�dical pour {child?.prenom || 'l\'enfant'}
+          </p>
+        </div>
+
+        <button
+          onClick={handleDownload}
+          style={{
+            background: 'linear-gradient(135deg, #17324D 0%, #0f2035 100%)',
+            color: 'white',
+            border: 'none',
+            padding: '10px 18px',
+            borderRadius: 12,
+            fontWeight: 800,
+            fontSize: '.85rem',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            boxShadow: '0 4px 12px rgba(23,50,77,.25)',
+            transition: 'all .2s ease',
+          }}
+        >
+          <Download size={16} color="#58B6A9" />
+          <span>G�n�rer Bilan M�dical (PDF)</span>
+        </button>
+      </div>
+
+      {/*    Cartes de Statistiques    */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+        {STATS.map(({ label, value, icon: Icon, color, bg }) => (
+          <div key={label} style={{
+            background: '#fff', borderRadius: 14, border: '1px solid #e2e8f0',
+            padding: '18px 20px', boxShadow: '0 2px 8px rgba(23,50,77,.04)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <span style={{ fontSize: '.75rem', color: '#64748b', fontWeight: 600 }}>{label}</span>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={15} color={color} />
+              </div>
+            </div>
+            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#17324D', lineHeight: 1 }}>{value}</div>
+            <div style={{ fontSize: '.7rem', color: '#94a3b8', marginTop: 6 }}>Dossier actif</div>
+          </div>
+        ))}
+      </div>
+
+      {/*    Navigation par onglets    */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         background: '#ffffff',
         border: '1px solid #e2e8f0',
-        borderRadius: 12,
-        padding: '6px 8px',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
-        flexWrap: 'wrap',
-        gap: 8,
+        borderRadius: 14,
+        padding: 4,
+        boxShadow: '0 2px 8px rgba(23,50,77,.04)',
       }}>
         <div style={{ display: 'flex', gap: 4, flex: 1 }}>
           {navTabs.map(t => {
@@ -302,53 +360,33 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
                 key={t.id}
                 onClick={() => setPage(t.id)}
                 style={{
-                  padding: '8px 14px',
-                  borderRadius: 8,
+                  flex: 1,
+                  padding: '9px 14px',
+                  borderRadius: 10,
                   border: 'none',
-                  background: isSel ? '#f0fdfa' : 'transparent',
-                  color: isSel ? '#0d9488' : '#64748b',
+                  background: isSel ? 'rgba(88,182,169,.12)' : 'transparent',
+                  color: isSel ? '#17324D' : '#64748b',
                   fontWeight: isSel ? 800 : 600,
                   fontSize: '.84rem',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: 6,
                   transition: 'all .15s ease',
                 }}
               >
-                <Icon size={15} color={isSel ? '#0d9488' : '#64748b'} />
+                <Icon size={15} color={isSel ? '#58B6A9' : '#64748b'} />
                 <span>{t.label}</span>
               </button>
             );
           })}
         </div>
-
-        {/* Bouton de téléchargement direct du PDF */}
-        <button
-          onClick={handleDownload}
-          style={{
-            background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-            color: 'white',
-            border: 'none',
-            padding: '8px 14px',
-            borderRadius: 8,
-            fontWeight: 700,
-            fontSize: '.82rem',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            boxShadow: '0 2px 8px rgba(5,150,105,.2)',
-          }}
-        >
-          <Download size={14} />
-          <span>Télécharger Bilan PDF</span>
-        </button>
       </div>
 
       {downloadSuccess && (
         <div style={{
-          background: '#ecfdf5',
+          background: 'rgba(88,182,169,.08)',
           border: '1px solid #a7f3d0',
           borderRadius: 10,
           padding: '10px 16px',
@@ -359,19 +397,19 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
           alignItems: 'center',
           gap: 8,
         }}>
-          <CheckCircle2 size={16} color="#059669" />
+          <CheckCircle2 size={16} color="#3d9b8e" />
           <span>Bilan médical PDF téléchargé avec succès.</span>
         </div>
       )}
 
-      {/* ── 1. VUE TABLEAU DE BORD & SIGNAUX ── */}
+      {/* ���� 1. VUE TABLEAU DE BORD & SIGNAUX ���� */}
       {page === 'dashboard' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Métriques clés */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
             <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '14px 16px' }}>
               <div style={{ fontSize: '.75rem', color: '#64748b', fontWeight: 600 }}>Convergence multi-acteurs</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0d9488', marginTop: 2 }}>{profil.convergenceScore}%</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#3d9b8e', marginTop: 2 }}>{profil.convergenceScore}%</div>
             </div>
             <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '14px 16px' }}>
               <div style={{ fontSize: '.75rem', color: '#64748b', fontWeight: 600 }}>Signaux prioritaires</div>
@@ -412,10 +450,10 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
         </div>
       )}
 
-      {/* ── 2. VUE OBSERVATIONS CROISÉES ÉCOLE & FAMILLE ── */}
+      {/* ���� 2. VUE OBSERVATIONS CROIS�0ES �0COLE & FAMILLE ���� */}
       {page === 'observations' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          {/* Retours École */}
+          {/* Retours �0cole */}
           <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 14, padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, color: '#1d4ed8' }}>
               <School size={18} />
@@ -465,7 +503,7 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
         </div>
       )}
 
-      {/* ── 3. VUE JEUX & TÉLÉMÉTRIE ── */}
+      {/* ���� 3. VUE JEUX & T�0L�0M�0TRIE ���� */}
       {page === 'jeux' && (
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 14, padding: 20 }}>
           <h3 style={{ fontSize: '.95rem', fontWeight: 800, margin: '0 0 14px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -488,7 +526,7 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
                     <div style={{ fontSize: '.7rem', color: '#64748b' }}>Réaction</div>
                   </div>
                   <div>
-                    <div style={{ fontWeight: 800, color: '#10b981', fontSize: '.95rem' }}>{j.taux_succes}%</div>
+                    <div style={{ fontWeight: 800, color: '#58B6A9', fontSize: '.95rem' }}>{j.taux_succes}%</div>
                     <div style={{ fontSize: '.7rem', color: '#64748b' }}>Succès</div>
                   </div>
                 </div>
@@ -498,7 +536,7 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
         </div>
       )}
 
-      {/* ── 4. VUE BILAN MÉDICAL & DÉCISION ── */}
+      {/* ���� 4. VUE BILAN M�0DICAL & D�0CISION ���� */}
       {page === 'decision' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Orientation clinique */}
@@ -517,20 +555,21 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
                   style={{
                     padding: '12px 14px',
                     borderRadius: 10,
-                    border: decision === d.id ? '2px solid #059669' : '1px solid #e2e8f0',
-                    background: decision === d.id ? '#f0fdf4' : '#ffffff',
+                    border: decision === d.id ? '2px solid #58B6A9' : '1px solid #e2e8f0',
+                    background: decision === d.id ? 'rgba(88,182,169,.08)' : '#ffffff',
                     fontWeight: 700,
                     fontSize: '.84rem',
-                    color: decision === d.id ? '#047857' : '#334155',
+                    color: decision === d.id ? '#17324D' : '#334155',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     textAlign: 'left',
+                    transition: 'all .15s ease',
                   }}
                 >
                   <span>{d.label}</span>
-                  {decision === d.id && <Check size={16} color="#059669" />}
+                  {decision === d.id && <Check size={16} color="#58B6A9" />}
                 </button>
               ))}
             </div>
@@ -555,3 +594,4 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
     </div>
   );
 }
+
