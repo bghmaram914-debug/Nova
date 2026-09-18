@@ -41,38 +41,75 @@ export default function EspaceFamille({ child, onObservationAdded, refreshTrigge
       </div>
 
       {/* ── Cartes de stats ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
         {STATS.map(({ label, value, icon: Icon, color, bg }) => (
-          <div key={label} style={{ ...card }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: '.75rem', color: '#64748b', fontWeight: 600 }}>{label}</span>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon size={15} color={color} />
+          <div
+            key={label}
+            className="card"
+            style={{
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: 16,
+              boxShadow: '0 2px 10px rgba(23,50,77,.03)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: '.76rem', color: '#64748b', fontWeight: 700 }}>{label}</span>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon size={17} color={color} />
               </div>
             </div>
-            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#17324D', lineHeight: 1 }}>{value}</div>
-            <div style={{ fontSize: '.7rem', color: '#94a3b8', marginTop: 6 }}>Ce mois-ci</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#17324D', lineHeight: 1 }}>{value}</div>
+            <div style={{ fontSize: '.72rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#58B6A9' }} /> Ce mois-ci
+            </div>
           </div>
         ))}
       </div>
 
       {/* ── Navigation par onglets ── */}
-      <div style={{ display: 'flex', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: 4, boxShadow: '0 2px 8px rgba(23,50,77,.04)', gap: 4 }}>
+      <div style={{
+        display: 'flex',
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: 16,
+        padding: 5,
+        boxShadow: '0 2px 8px rgba(23,50,77,.03)',
+        gap: 6,
+        flexWrap: 'wrap'
+      }}>
         {TABS.map(t => {
           const Icon = t.icon;
           const isSel = active === t.id;
           return (
-            <button key={t.id} onClick={() => setActive(t.id)} style={{
-              flex: 1, padding: '9px 12px', borderRadius: 10, border: 'none',
-              background: isSel ? t.bg : 'transparent',
-              color: isSel ? t.color : '#94a3b8',
-              fontWeight: isSel ? 800 : 600, fontSize: '.82rem',
-              cursor: 'pointer', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', gap: 6, fontFamily: 'inherit',
-              transition: 'all .15s ease',
-              outline: isSel ? `2px solid ${t.color}20` : 'none',
-            }}>
-              <Icon size={14} color={isSel ? t.color : '#94a3b8'} />
+            <button
+              key={t.id}
+              onClick={() => setActive(t.id)}
+              style={{
+                flex: 1,
+                minWidth: 160,
+                padding: '10px 16px',
+                borderRadius: 12,
+                border: 'none',
+                background: isSel ? (t.id === 'inscrire' ? 'linear-gradient(135deg, #17324D 0%, #2b5580 100%)' : t.bg) : 'transparent',
+                color: isSel ? (t.id === 'inscrire' ? '#FFFF66' : t.color) : '#64748b',
+                fontWeight: isSel ? 800 : 600,
+                fontSize: '.85rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                fontFamily: 'inherit',
+                transition: 'all .16s ease',
+                boxShadow: isSel && t.id === 'inscrire' ? '0 4px 12px rgba(23,50,77,.2)' : 'none'
+              }}
+            >
+              <Icon size={16} color={isSel ? (t.id === 'inscrire' ? '#FFFF66' : t.color) : '#94a3b8'} />
               <span>{t.label}</span>
             </button>
           );
@@ -82,7 +119,11 @@ export default function EspaceFamille({ child, onObservationAdded, refreshTrigge
       {/* ── Contenu de l'onglet ── */}
       <div key={active} className="fade-in">
         {active === 'inscrire' && (
-          <InscriptionEnfant onEnfantAjoute={(newChild) => { if (onEnfantAjoute) onEnfantAjoute(newChild); }} />
+          <InscriptionEnfant
+            onEnfantAjoute={(newChild) => {
+              if (onEnfantAjoute) onEnfantAjoute(newChild);
+            }}
+          />
         )}
         {active === 'parent'  && <EspaceParent  child={child} onObservationAdded={onObservationAdded} refreshTrigger={refreshTrigger} user={user} />}
         {active === 'famille' && <EspaceFamilleElargie child={child} onObservationAdded={onObservationAdded} refreshTrigger={refreshTrigger} user={user} />}

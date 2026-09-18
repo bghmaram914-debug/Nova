@@ -178,8 +178,15 @@ export default function App() {
 
       <main style={{ flex: 1, padding: '32px 40px 48px', overflowY: 'auto', minHeight: '100vh' }}>
           {isRegisteringChild ? (
-            <div style={{ maxWidth: 840, margin: '0 auto' }} className="fade-in">
-              <div style={{ marginBottom: 16 }}>
+            <div style={{ maxWidth: 1080, margin: '0 auto' }} className="fade-in">
+              <div style={{
+                marginBottom: 20,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 12
+              }}>
                 <button
                   type="button"
                   onClick={() => setIsRegisteringChild(false)}
@@ -187,28 +194,53 @@ export default function App() {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 8,
-                    background: 'white',
+                    background: '#ffffff',
                     border: '1.5px solid #cbd5e1',
-                    borderRadius: 10,
-                    padding: '8px 16px',
-                    color: '#1e293b',
+                    borderRadius: 12,
+                    padding: '9px 18px',
+                    color: '#17324D',
                     fontWeight: 700,
                     fontSize: '.85rem',
                     cursor: 'pointer',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+                    boxShadow: '0 2px 8px rgba(23,50,77,0.04)',
                     transition: 'all .18s ease'
                   }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.color = '#2563eb'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#1e293b'; }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = '#58B6A9';
+                    e.currentTarget.style.color = '#3a978a';
+                    e.currentTarget.style.transform = 'translateX(-2px)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = '#cbd5e1';
+                    e.currentTarget.style.color = '#17324D';
+                    e.currentTarget.style.transform = 'none';
+                  }}
                 >
-                  <ArrowLeft size={16} /> ← Retour à mon espace
+                  <ArrowLeft size={16} /> Retour à mon espace
                 </button>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  background: 'rgba(88,182,169,.1)',
+                  border: '1px solid rgba(88,182,169,.25)',
+                  padding: '6px 14px',
+                  borderRadius: 999,
+                  fontSize: '.74rem',
+                  fontWeight: 700,
+                  color: '#268d80'
+                }}>
+                  <span>🔒 Chiffrement de bout en bout</span>
+                  <span>•</span>
+                  <span>Conforme INADP Loi 2004-63</span>
+                </div>
               </div>
+
               <InscriptionEnfant
                 onEnfantAjoute={(newChild) => {
                   setActiveChild(newChild);
                   handleDataChanged();
-                  setTimeout(() => setIsRegisteringChild(false), 2000);
                 }}
               />
             </div>

@@ -14,8 +14,8 @@ const FREQ_LABELS = ['', 'Très occasionnel', 'De temps en temps', 'Régulier', 
 export default function EspaceParent({ child, onObservationAdded, user }) {
   const [domaine, setDomaine] = useState('ATTENTION');
   const [frequence, setFrequence] = useState(4);
-  const [detail, setDetail] = useState('Au moment des devoirs, la moindre distraction sonore coupe totalement son fil de pensée. Fatigue mentale rapide.');
-  const [exemples, setExemples] = useState('Se lève plusieurs fois pour aller chercher un objet, a du mal à finir 3 lignes sans pause.');
+  const [detail, setDetail] = useState('');
+  const [exemples, setExemples] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 

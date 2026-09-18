@@ -31,8 +31,8 @@ export default function EspaceEnseignant({ child, onObservationAdded, user, allC
   const [domaine, setDomaine]           = useState('ATTENTION');
   const [frequence, setFrequence]       = useState(4);
   const [impact, setImpact]             = useState(4);
-  const [detail, setDetail]             = useState("Difficulté persistante à maintenir son attention sur une double consigne écrite ou lors des exercices individuels de plus de 10 minutes.");
-  const [exemples, setExemples]         = useState("Regarde souvent par la fenêtre au début de l'exercice, oublie la 2ème étape.");
+  const [detail, setDetail]             = useState("");
+  const [exemples, setExemples]         = useState("");
   const [loading, setLoading]           = useState(false);
   const [success, setSuccess]           = useState(false);
   const [obsCount, setObsCount]         = useState(2);

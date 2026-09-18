@@ -23,7 +23,7 @@ export default function EspaceEnfant({ child, onActivityCompleted }) {
   // Targets state
   const [targets, setTargets] = useState([]);
   const [message, setMessage] = useState('Clique sur les étoiles dorées dès qu elles apparaissent ! ⭐');
-  const [encouragement, setEncouragement] = useState('Bienvenue Astronaute Léo ! 🚀');
+  const [encouragement, setEncouragement] = useState(`Bienvenue Champion ${child?.prenom || 'Sami'} ! 🚀`);
 
   // Telemetry collected
   const [responseTimes, setResponseTimes] = useState([]);

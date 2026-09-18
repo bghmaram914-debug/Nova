@@ -7,9 +7,9 @@ import {
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 
-// ��������������������������������������������������������������������������������������������������������������������������
+// 
 // MOCK DATA CLINIQUE (TUNISIE)
-// ��������������������������������������������������������������������������������������������������������������������������
+// 
 const MOCK_PROFILE = {
   signals: [
     { domaine: 'ATTENTION',    libelle: 'Attention & Consignes',       niveau: 'SIGNAL_FORT',       score: 78, description: 'Convergence forte entre école et maison sur les difficultés d\'attention soutenue.' },
@@ -36,11 +36,11 @@ const MOCK_JEUX = [
 ];
 
 const DOMAIN_ICONS = {
-  ATTENTION: '�x}�',
-  LANGAGE: '�x�',
-  MEMOIRE: '�x��',
-  MOTRICITE: '�S�️',
-  COMPORTEMENT: '�x��',
+  ATTENTION: '🎯',
+  LANGAGE: '💬',
+  MEMOIRE: '🧠',
+  MOTRICITE: '✏️',
+  COMPORTEMENT: '🏫',
 };
 
 function SignalBadge({ niveau }) {
@@ -49,16 +49,16 @@ function SignalBadge({ niveau }) {
   return <span style={{ background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0', padding: '2px 8px', borderRadius: 6, fontSize: '.72rem', fontWeight: 700 }}>Pas de signal</span>;
 }
 
-// ��������������������������������������������������������������������������������������������������������������������������
-// G�0N�0RATEUR ET T�0L�0CHARGEMENT DIRECT DU FICHIER PDF
-// ��������������������������������������������������������������������������������������������������������������������������
+// 
+// G0N0RATEUR ET T0L0CHARGEMENT DIRECT DU FICHIER PDF
+// 
 export const generateAndDownloadNovaPDF = (child, profil) => {
   try {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const childName = `${child?.prenom || 'Youssef'} ${child?.nom_anonyme || 'B.'}`;
     const childCode = child?.code_identifiant || 'TN-NOVA-2026-084';
     const ageNiveau = `${child?.age || 7} ans · ${child?.niveau_scolaire || '2ème Année Primaire'}`;
-    const etablissement = child?.etablissement || '�0cole Primaire Habib Bourguiba - Tunis';
+    const etablissement = child?.etablissement || 'École Primaire Habib Bourguiba - Tunis';
     const today = new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
 
     // 1. Bandeau supérieur institutionnel
@@ -67,13 +67,13 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setTextColor(239, 68, 68);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'bold');
-    doc.text("R�0PUBLIQUE TUNISIENNE", 14, 9);
+    doc.text("RÉPUBLIQUE TUNISIENNE", 14, 9);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'normal');
-    doc.text("· MINIST��RE DE LA SANT�0 PUBLIQUE & MINIST��RE DE L'�0DUCATION", 58, 9);
+    doc.text("· MINISTRE DE LA SANTÉ PUBLIQUE & MINISTRE DE L'ÉDUCATION", 58, 9);
     doc.setTextColor(148, 163, 184);
     doc.setFontSize(7.2);
-    doc.text("OBSERVATOIRE DES TROUBLES NEUROD�0VELOPPEMENTAUX (TND) · PROTOCOLE NATIONAL", 14, 16);
+    doc.text("OBSERVATOIRE DES TROUBLES NEURODÉVELOPPEMENTAUX (TND) · PROTOCOLE NATIONAL", 14, 16);
     doc.setTextColor(110, 231, 183);
     doc.text("Conforme Loi INADP 2004-63", 152, 16);
 
@@ -81,11 +81,11 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setTextColor(29, 78, 216);
     doc.setFontSize(15);
     doc.setFont('helvetica', 'bold');
-    doc.text("NOVA TUNISIE � BILAN CLINIQUE DE SYNTH��SE", 14, 34);
+    doc.text("NOVA TUNISIE  BILAN CLINIQUE DE SYNTHÈSE", 14, 34);
     doc.setTextColor(71, 85, 105);
     doc.setFontSize(8.5);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Compte-rendu Pédopsychiatrique & Recommandations d'Aménagements · �0dition du ${today}`, 14, 40);
+    doc.text(`Compte-rendu Pédopsychiatrique & Recommandations d'Aménagements · Édition du ${today}`, 14, 40);
     doc.setDrawColor(226, 232, 240);
     doc.setLineWidth(0.4);
     doc.line(14, 43, 196, 43);
@@ -97,9 +97,9 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setTextColor(100, 116, 139);
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
-    doc.text("CODE PATIENT S�0CURIS�0", 18, 54);
-    doc.text("IDENTIT�0 DU PATIENT", 80, 54);
-    doc.text("�GE & SCOLARIT�0", 140, 54);
+    doc.text("CODE PATIENT SÉCURISÉ", 18, 54);
+    doc.text("IDENTITÉ DU PATIENT", 80, 54);
+    doc.text("GE & SCOLARITÉ", 140, 54);
     doc.setTextColor(29, 78, 216);
     doc.setFontSize(10.5);
     doc.text(childCode, 18, 60);
@@ -116,7 +116,7 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(10.5);
     doc.setFont('helvetica', 'bold');
-    doc.text("1. SIGNAUX NEUROD�0VELOPPEMENTAUX D�0TECT�0S PAR DOMAINE", 14, y);
+    doc.text("1. SIGNAUX NEURODÉVELOPPEMENTAUX DÉTECTÉS PAR DOMAINE", 14, y);
     y += 5;
 
     const signals = (profil?.signals && profil.signals.length > 0) ? profil.signals : MOCK_PROFILE.signals;
@@ -165,7 +165,7 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setTextColor(15, 23, 42);
     doc.setFontSize(10.5);
     doc.setFont('helvetica', 'bold');
-    doc.text("2. PR�0CONISATIONS M�0DICALES & AM�0NAGEMENTS SCOLAIRES", 14, y);
+    doc.text("2. PRÉCONISATIONS MÉDICALES & AMÉNAGEMENTS SCOLAIRES", 14, y);
     y += 5;
 
     doc.setFillColor(240, 253, 244);
@@ -175,7 +175,7 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     const recos = [
-      "- Bilan neuropsychologique approfondi : �0valuation des fonctions exécutives et de l'attention soutenue.",
+      "- Bilan neuropsychologique approfondi : Évaluation des fonctions exécutives et de l'attention soutenue.",
       "- Aménagements scolaires en classe : Majoration du temps (+25%), simplification des doubles consignes.",
       "- Aménagement ergonomique : Placement face au tableau pour limiter les distracteurs visuels et sonores.",
       "- Suivi collaboratif & contrôle : Réévaluation pluridisciplinaire planifiée à 3 mois via NOVA Tunisie."
@@ -220,7 +220,7 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     doc.setTextColor(71, 85, 105);
     doc.setFontSize(7.2);
     doc.setFont('helvetica', 'normal');
-    doc.text("Ministère de l'�0ducation · Direction Régionale", 112, y + 16);
+    doc.text("Ministère de l'Éducation · Direction Régionale", 112, y + 16);
     doc.text("Dossier d'adaptation pédagogique", 112, y + 20.5);
     doc.setDrawColor(203, 213, 225);
     doc.line(112, y + 25, 190, y + 25);
@@ -230,7 +230,7 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
     // 7. Pied de page
     doc.setTextColor(148, 163, 184);
     doc.setFontSize(7);
-    doc.text("NOVA TUNISIE � Document officiel généré sous contrôle médical (Loi INADP n° 2004-63).", 14, 288);
+    doc.text("NOVA TUNISIE  Document officiel généré sous contrôle médical (Loi INADP n° 2004-63).", 14, 288);
     doc.text("Page 1 / 1", 188, 288);
 
     const sanitizedName = (child?.nom_anonyme || child?.prenom || 'Enfant').replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -243,25 +243,101 @@ export const generateAndDownloadNovaPDF = (child, profil) => {
   }
 };
 
-// ��������������������������������������������������������������������������������������������������������������������������
-// COMPOSANT PRINCIPAL ESPACE SP�0CIALISTE �0PUR�0
-// ��������������������������������������������������������������������������������������������������������������������������
+// 
+// COMPOSANT PRINCIPAL ESPACE SP0CIALISTE 0PUR0
+// 
 export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
   const [page, setPage] = useState('dashboard');
   const [profil, setProfil] = useState(MOCK_PROFILE);
-  const [obsEcole, setObsEcole] = useState(MOCK_OBS_ECOLE);
-  const [obsFamille, setObsFamille] = useState(MOCK_OBS_FAMILLE);
-  const [jeux, setJeux] = useState(MOCK_JEUX);
+  const [obsEcole, setObsEcole] = useState([]);
+  const [obsFamille, setObsFamille] = useState([]);
+  const [jeux, setJeux] = useState([]);
   const [notes, setNotes] = useState(() => localStorage.getItem('nova_notes') || '');
   const [decision, setDecision] = useState('bilan_neuro');
   const [downloadSuccess, setDownloadSuccess] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/croisement/enfant/e1111111-1111-1111-1111-111111111111')
-      .then(r => r.json())
-      .then(data => { if (data?.signals) setProfil(data); })
+    const childId = child?.id || 'e1111111-1111-1111-1111-111111111111';
+
+    // 1. Récupérer la synthèse croisée & signaux
+    fetch(`http://localhost:5000/api/profil-explicable/${childId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          const DOMAIN_LABELS = {
+            ATTENTION: 'Attention & Consignes',
+            LANGAGE: 'Langage & Communication',
+            MEMOIRE: 'Mémoire & Apprentissage',
+            MOTRICITE: 'Motricité fine & Graphisme',
+            COMPORTEMENT: 'Comportement & Régulation',
+          };
+          const signals = Array.isArray(data.domaines)
+            ? data.domaines.map(d => ({
+                domaine: d.domaine,
+                libelle: DOMAIN_LABELS[d.domaine] || d.domaine,
+                niveau: d.niveau,
+                score: d.niveau === 'SIGNAL_FORT' ? 85 : d.niveau === 'SIGNAL_CONTEXTUEL' ? 60 : d.niveau === 'DIVERGENCE_DETECTEE' ? 70 : 20,
+                description: d.justification || d.recommandation || 'Aucun signal d\'alerte.'
+              }))
+            : MOCK_PROFILE.signals;
+
+          const sfCount = signals.filter(s => s.niveau === 'SIGNAL_FORT').length;
+          const scCount = signals.filter(s => s.niveau === 'SIGNAL_CONTEXTUEL').length;
+          const convScore = data.domaines ? Math.max(25, Math.min(95, 40 + (sfCount * 25) + (scCount * 15))) : 82;
+
+          setProfil({
+            ...data,
+            signals,
+            convergenceScore: convScore,
+            telemetrie: { scoreAttn: 64, reactionMs: 780, successRate: 71, sessions: 8 }
+          });
+        }
+      })
       .catch(() => setProfil(MOCK_PROFILE));
-  }, [refreshTrigger]);
+
+    // 2. Récupérer les observations réelles de cet enfant (École + Famille)
+    fetch(`http://localhost:5000/api/observations/${childId}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(obsList => {
+        if (Array.isArray(obsList) && obsList.length > 0) {
+          setObsEcole(obsList.filter(o => o.contexte === 'ECOLE'));
+          setObsFamille(obsList.filter(o => o.contexte === 'MAISON' || o.contexte === 'FAMILLE'));
+        } else {
+          setObsEcole(MOCK_OBS_ECOLE);
+          setObsFamille(MOCK_OBS_FAMILLE);
+        }
+      })
+      .catch(() => {
+        setObsEcole(MOCK_OBS_ECOLE);
+        setObsFamille(MOCK_OBS_FAMILLE);
+      });
+
+    // 3. Récupérer les activités réelles de cet enfant
+    fetch(`http://localhost:5000/api/activites/${childId}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(actList => {
+        if (Array.isArray(actList) && actList.length > 0) {
+          const JEU_NAMES = {
+            ATTENTION_FOCUS: 'Bulle Attention',
+            SEQUENCE_MEMOIRE: 'Mémoire Séquence',
+            INHIBITION_MOTRICE: 'Frein Réflexe',
+          };
+          setJeux(actList.map((a, idx) => ({
+            id: a.id || idx,
+            nom_jeu: JEU_NAMES[a.type_jeu] || a.type_jeu,
+            score: a.taux_reussite || 70,
+            temps_reaction_ms: a.temps_reponse_ms || 750,
+            taux_succes: a.taux_reussite || 70,
+            niveau_adaptatif: a.niveau_atteint || 3,
+            duree_minutes: 10,
+            created_at: (a.date_session || new Date().toISOString()).slice(0, 10),
+          })));
+        } else {
+          setJeux(MOCK_JEUX);
+        }
+      })
+      .catch(() => setJeux(MOCK_JEUX));
+  }, [child, refreshTrigger]);
 
   const handleDownload = () => {
     const ok = generateAndDownloadNovaPDF(child, profil);
@@ -273,28 +349,28 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
 
   const navTabs = [
     { id: 'dashboard',    label: 'Tableau de bord & Signaux', icon: BarChart3 },
-    { id: 'observations', label: 'Observations �cole & Famille', icon: Users },
-    { id: 'jeux',         label: 'Jeux & T�l�m�trie', icon: Gamepad2 },
-    { id: 'decision',     label: 'Bilan M�dical & D�cision', icon: FileCheck },
+    { id: 'observations', label: 'Observations École & Famille', icon: Users },
+    { id: 'jeux',         label: 'Jeux & Télémétrie', icon: Gamepad2 },
+    { id: 'decision',     label: 'Bilan Médical & Décision', icon: FileCheck },
   ];
 
   const STATS = [
     { label: 'Score de convergence', value: `${profil.convergenceScore}%`, icon: Brain, color: '#17324D', bg: 'rgba(23,50,77,.07)' },
-    { label: 'Signaux forts d�cel�s', value: profil.signals.filter(s => s.niveau === 'SIGNAL_FORT').length || '1', icon: Activity, color: '#e11d48', bg: 'rgba(225,29,72,.08)' },
-    { label: 'Sessions t�l�m�trie', value: `${profil.telemetrie?.sessions || 8}`, icon: Gamepad2, color: '#58B6A9', bg: 'rgba(88,182,169,.1)' },
-    { label: 'Avis m�dical', value: decision ? 'En cours' : '� valider', icon: ShieldCheck, color: '#3d9b8e', bg: 'rgba(61,155,142,.1)' },
+    { label: 'Signaux forts détectés', value: profil.signals.filter(s => s.niveau === 'SIGNAL_FORT').length || '1', icon: Activity, color: '#e11d48', bg: 'rgba(225,29,72,.08)' },
+    { label: 'Sessions télémétrie', value: `${profil.telemetrie?.sessions || 8}`, icon: Gamepad2, color: '#58B6A9', bg: 'rgba(88,182,169,.1)' },
+    { label: 'Avis médical', value: decision ? 'En cours' : 'À valider', icon: ShieldCheck, color: '#3d9b8e', bg: 'rgba(61,155,142,.1)' },
   ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }} className="fade-up">
-      {/*    En-t�te de page Donezo Style    */}
+      {/*    En-tte de page Donezo Style    */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
         <div>
           <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#17324D', margin: 0, letterSpacing: '-.02em' }}>
-            Espace Sp�cialiste & P�dopsychiatrie
+            Espace Spécialiste & Pédopsychiatrie
           </h1>
           <p style={{ fontSize: '.88rem', color: '#64748b', margin: '4px 0 0' }}>
-            Analyse crois�e multi-sources, signaux faibles & dossier m�dical pour {child?.prenom || 'l\'enfant'}
+            Analyse croisée multi-sources, signaux faibles & dossier médical pour {child?.prenom || 'l\'enfant'}
           </p>
         </div>
 
@@ -317,7 +393,7 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
           }}
         >
           <Download size={16} color="#58B6A9" />
-          <span>G�n�rer Bilan M�dical (PDF)</span>
+          <span>Générer Bilan Médical (PDF)</span>
         </button>
       </div>
 
@@ -402,7 +478,7 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
         </div>
       )}
 
-      {/* ���� 1. VUE TABLEAU DE BORD & SIGNAUX ���� */}
+      {/*  1. VUE TABLEAU DE BORD & SIGNAUX  */}
       {page === 'dashboard' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Métriques clés */}
@@ -450,10 +526,10 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
         </div>
       )}
 
-      {/* ���� 2. VUE OBSERVATIONS CROIS�0ES �0COLE & FAMILLE ���� */}
+      {/*  2. VUE OBSERVATIONS CROIS0ES 0COLE & FAMILLE  */}
       {page === 'observations' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          {/* Retours �0cole */}
+          {/* Retours École */}
           <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 14, padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, color: '#1d4ed8' }}>
               <School size={18} />
@@ -503,7 +579,7 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
         </div>
       )}
 
-      {/* ���� 3. VUE JEUX & T�0L�0M�0TRIE ���� */}
+      {/*  3. VUE JEUX & T0L0M0TRIE  */}
       {page === 'jeux' && (
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 14, padding: 20 }}>
           <h3 style={{ fontSize: '.95rem', fontWeight: 800, margin: '0 0 14px', color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -536,7 +612,7 @@ export default function EspaceSpecialiste({ child, refreshTrigger, user }) {
         </div>
       )}
 
-      {/* ���� 4. VUE BILAN M�0DICAL & D�0CISION ���� */}
+      {/*  4. VUE BILAN M0DICAL & D0CISION  */}
       {page === 'decision' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Orientation clinique */}

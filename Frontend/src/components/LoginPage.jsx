@@ -36,8 +36,8 @@ const FOCUS_STYLE = { borderColor: '#58B6A9', boxShadow: '0 0 0 3px rgba(88,182,
 export default function LoginPage({ onLoginSuccess, logoutNotice }) {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [selected, setSelected] = useState('FAMILLE');
-  const [email, setEmail] = useState('famille.b@nova.tn');
-  const [password, setPassword] = useState('famille123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [nom, setNom] = useState('');
   const [etablissement, setEtablissement] = useState('');
   const [gouvernorat, setGouvernorat] = useState('Tunis');

@@ -11,8 +11,8 @@ const DOMAINS = [
 
 export default function EspaceFamilleElargie({ child, onObservationAdded, user }) {
   const [domaine, setDomaine] = useState('ATTENTION');
-  const [reponseDetaillee, setReponseDetaillee] = useState('Lors des déjeuners de famille et des jeux calmes, a du mal à rester assis plus de 10 minutes et passe constamment d\'une activité à l\'autre.');
-  const [exemplesConcrets, setExemplesConcrets] = useState('Quitte souvent la table avant la fin, abandonne vite les activités calmes.');
+  const [reponseDetaillee, setReponseDetaillee] = useState('');
+  const [exemplesConcrets, setExemplesConcrets] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState(null);
 

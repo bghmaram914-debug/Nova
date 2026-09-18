@@ -1,3 +1,5 @@
+import bcrypt from 'bcrypt';
+import crypto from 'node:crypto';
 import { v4 as uuidv4 } from 'uuid';
 import db, { mockDatabase } from '../config/db.js';
 import { genererProfilComplet } from '../services/croisementService.js';
@@ -57,13 +59,16 @@ export const creerEnfant = async (req, res) => {
     created_at: new Date().toISOString(),
   };
 
+  const payload = `${id}|${parentId || 'a2222222-2222-2222-2222-222222222222'}|SIGNE|${new Date().toISOString()}`;
+  const signature_electronique_hash = crypto.createHash('sha256').update(payload).digest('hex');
+
   const consentement = {
     id: uuidv4(),
     enfant_id: id,
     parent_id: parentId || 'a2222222-2222-2222-2222-222222222222',
     statut: 'SIGNE',
     date_signature: new Date().toISOString(),
-    signature_electronique_hash: `sha256_tn_${Math.random().toString(36).substring(2, 15)}`,
+    signature_electronique_hash: signature_electronique_hash,
     remarques_parentales: 'Consentement INADP (Loi 2004-63 Tunisie) accordé lors de l\'inscription de l\'enfant.',
   };
 
@@ -111,13 +116,16 @@ export const getConsentementByEnfant = async (req, res) => {
 
 export const enregistrerConsentement = async (req, res) => {
   const { enfantId, parentId, statut, remarques } = req.body;
+  const payload = `${enfantId}|${parentId || 'a2222222-2222-2222-2222-222222222222'}|${statut || 'SIGNE'}|${new Date().toISOString()}`;
+  const signature_electronique_hash = crypto.createHash('sha256').update(payload).digest('hex');
+
   const nouveau = {
     id: uuidv4(),
     enfant_id: enfantId,
     parent_id: parentId || 'a2222222-2222-2222-2222-222222222222',
     statut: statut || 'SIGNE',
     date_signature: new Date().toISOString(),
-    signature_electronique_hash: `sha256_${Math.random().toString(36).substring(2, 15)}`,
+    signature_electronique_hash: signature_electronique_hash,
     remarques_parentales: remarques || 'Consentement numérique signé'
   };
 
@@ -199,6 +207,11 @@ export const loginUser = async (req, res) => {
       }
     }
 
+    const motDePasseValide = user.mot_de_passe ? await bcrypt.compare(password, user.mot_de_passe) : true;
+    if (!motDePasseValide) {
+      return res.status(401).json({ error: 'Mot de passe incorrect.' });
+    }
+
     const { mot_de_passe, ...safeUser } = user;
     const token = `nova_session_${safeUser.id}_${Date.now()}`;
 
@@ -230,12 +243,13 @@ export const registerUser = async (req, res) => {
   }
 
   const id = uuidv4();
+  const motDePasseHache = await bcrypt.hash(password, 10);
   const nouvelObservateur = {
     id,
     nom: nom.trim(),
     role,
     email: cleanEmail,
-    mot_de_passe: password,
+    mot_de_passe: motDePasseHache,
     etablissement: etablissement?.trim() ? `${etablissement.trim()} (${gouvernorat || 'Tunisie'})` : `Structure ${role} (${gouvernorat || 'Tunisie'})`,
     specialite: specialite?.trim() || `Intervenant ${role}`,
     created_at: new Date().toISOString()
@@ -248,7 +262,7 @@ export const registerUser = async (req, res) => {
     await db.query(
       `INSERT INTO observateurs (id, nom, role, email, mot_de_passe, etablissement, specialite)
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [id, nouvelObservateur.nom, role, cleanEmail, password, nouvelObservateur.etablissement, nouvelObservateur.specialite]
+      [id, nouvelObservateur.nom, role, cleanEmail, motDePasseHache, nouvelObservateur.etablissement, nouvelObservateur.specialite]
     );
   } catch (_) {}
 
